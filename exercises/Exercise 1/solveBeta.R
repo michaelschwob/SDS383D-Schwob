@@ -39,8 +39,8 @@ solveFun <- function(X, y, W){
 ### Simulate Data and Implement
 ###
 
-N <- c(800) # largest N is 800
-P <- c(200) # largest P is 200
+N <- c(10, 100, 500, 800)
+P <- c(2, 50, 100, 200)
 
 for(i in 1:length(N)){
 
