@@ -31,6 +31,7 @@ solveFun <- function(X, y, W){
   
   ## Pseudo-code step 3 ; solve for beta.hat in U*beta.hat = z
   beta <- backsolve(U, z)
+
   return(beta)
 }
 
