@@ -77,6 +77,8 @@ comparison <- glm(y ~ X, family = binomial())
 ### Plot Log-likelihood values
 ###
 
+png("gradientdescent.png")
 plot(ll_iter, type = "l", main = "Convergence of Log-likelihood", ylab = "Log-likelihood")
 abline(h = logLik(comparison), col = "red")
-legend("bottomright", legend = c("Stochastic Descent Inference", "glm()"), lty = 1, col = c("black", "red"))
+legend("bottomright", legend = c("Gradient Descent Inference", "glm()"), lty = 1, col = c("black", "red"))
+dev.off()
