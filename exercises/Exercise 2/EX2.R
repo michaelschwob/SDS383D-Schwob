@@ -72,7 +72,6 @@ while (!conv){
 
 comparison <- glm(y ~ X, family = binomial())
 
-
 ###
 ### Plot Log-likelihood values
 ###
