@@ -13,12 +13,6 @@ X <- as.matrix(data[, 3:12])
 X <- apply(X, 2, scale)
 X <- cbind(rep(1,nrow(data)), X)
 
-# y <- y[1:400] # was y_train
-# X <- X[1:400,] # was X_train
-
-# y_test <- y[401:nrow(data)]
-# X_test <- X[401:nrow(data),]
-
 p <- 11
 
 ## Write log-likelihood function
