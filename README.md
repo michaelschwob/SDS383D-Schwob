@@ -1,6 +1,6 @@
 # SDS383D-Schwob
 
-https://img.shields.io/github/last-commit/michaelschwob/SDS383D-Schwob?style=for-the-badge
+<img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/michaelschwob/SDS383D-Schwob?style=for-the-badge">
 
 This repository collects my work for UT's SDS383D course.
 
