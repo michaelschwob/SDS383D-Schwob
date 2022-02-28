@@ -66,5 +66,5 @@ confint(fit)[2, ]
 
 res <- y - X%*%apply(betas, 2, mean)
 png("hist.png")
-hist(res, main = "Histogram of Model Residuals", breaks = 50, col = "black", border = "black")
+hist(res, main = "Histogram of Model Residuals", breaks = 50, col = "black", border = "white")
 dev.off()
