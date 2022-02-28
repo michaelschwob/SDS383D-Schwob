@@ -17,7 +17,7 @@ library(bayestestR) # calculate Bayesian credible intervals
 data <- read.csv("greenbuildings.csv")
 n <- dim(data)[1]
 
-## Response  =  revenue/sq.ft.
+## Response  =  revenue*ft^2/100
 y <- data$Rent*data$leasing_rate/100
 
 ## design matrix
