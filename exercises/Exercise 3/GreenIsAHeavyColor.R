@@ -40,7 +40,7 @@ h <- 2
 ## Initial Values
 lambda.vec <- rgamma(n, h/2, h/2)
 Lambda <- diag(lambda.vec)
-omega <- rgamma(d/2, eta/2)
+omega <- rgamma(1, d/2, eta/2)
 beta <- rmvnorm(1, m, solve(omega*K))
 
 ## Save Matrices
@@ -55,6 +55,8 @@ beta.save[, 1] <- beta
 nu.star <- n + d
 eta.star <- eta + t(y)%*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%*%Lambda%*%X + t(m)%*%K)%*%solve(t(X)%*%Lambda%*%X + K)%*%t(t(y)%*%Lambda%*%X + t(m)%*%K)
 
+## work on the whole multiply by a diagonal matrix thing
+
 ###
 ### Gibbs Sampler
 ###
@@ -65,7 +67,7 @@ for(i in 2:M){
     ### Sample beta
     ###
 
-    tmp.Sig <- solve(omega.save[i-1]*t(X)%*%Lambda%*%X + omega.save[i-1]%*%K)
+    tmp.Sig <- solve(omega.save[i-1]*t(X)%*%Lambda%*%X + omega.save[i-1]*K)
     tmp.mn <- tmp.Sig%*%(omega.save[i-1]*t(X)%*%Lambda%*%y + omega.save[i-1]*K%*%m)
     beta.save[, i] <- rmvnorm(1, tmp.mn, tmp.Sig)
 
