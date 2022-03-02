@@ -38,7 +38,7 @@ K <- diag(K)
 m <- rep(1, p)
 d <- 1
 eta <- 1
-h <- 2
+h <- 5 # was 2
 
 ## Initial Values
 lambda.vec <- rgamma(n, h/2, h/2)
@@ -114,16 +114,26 @@ setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 3")
 source("GoGreen.R")
 setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 3")
 
-## Using our method
-ci(beta.save[2, ], method = "HDI")
-
+## Compare CIs
+for(i in 1:p){
+    cat(paste("Old Model with ", expression(beta), i, ": "))
+    print(ci(betas[, i], method = "HDI"))
+    cat("\n")
+    cat(paste("NewModel with ", expression(beta), i, ": "))
+    print(ci(beta.save[i, ], method = "HDI"))
+    cat("\n", "\n")
+}
 
 ###
-### Residual Analysis
+### Residual Analysis Comparison
 ###
 
-res <- y - X%*%apply(beta.save, 1, mean)
-png("hist.png")
-hist(res, main = "Histogram of Model Residuals", breaks = 50, col = "black", border = "white")
+res.old <- y - X%*%apply(betas, 2, mean)
+res.new <- y - X%*%apply(beta.save, 1, mean)
+
+png("compare_histogram.png")
+hist(res.old, main = "Histogram of Residuals (Comparison)", breaks = 50, col = rgb(0, 0, 1, 0.25))
+hist(res.new, breaks = 50, col = rgb(1, 0, 0, 0.25), add = TRUE)
+#abline(v = 0, col = "red")
+legend("topright", legend = c("Homoskedastic", "Heteroskedastic"), col = c("red", "blue"), lty = 1)
 dev.off()
-
