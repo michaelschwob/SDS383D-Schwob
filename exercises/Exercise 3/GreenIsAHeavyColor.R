@@ -58,7 +58,7 @@ nu.star <- n + d
 eta.star <- eta + t(y)%*%(lambda.vec%d*%y) + t(m)%*%K%*%m - (t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)%*%solve(t(X)%*%(lambda.vec%d*%X) + K)%*%t(t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)
 
 ## Progress Bar
-pb <- progress_bar$new(format = " executing some pretty awesome code [:bar] :percent eta: :eta", total = M, clear = FALSE)
+pb <- progress_bar$new(format = " impressing James [:bar] :percent eta: :eta", total = M, clear = FALSE)
 
 ###
 ### Gibbs Sampler
