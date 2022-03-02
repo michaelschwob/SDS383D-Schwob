@@ -10,7 +10,8 @@ library(ggplot2)
 library(mvtnorm)
 library(progress)
 library(fields)
-M <- 1000 # number of iterations
+library(bayestestR)
+M <- 5000 # number of iterations
 
 ###
 ### Get Data
@@ -24,7 +25,7 @@ n <- dim(data)[1]
 y <- data$Rent*data$leasing_rate/100
 
 ## design matrix
-X <- cbind(rep(1:n), data$green_rating, data$City_Market_Rent, data$age, data$class_a,  data$class_b)
+X <- cbind(rep(1, n), data$green_rating, data$City_Market_Rent, data$age, data$class_a,  data$class_b)
 p <- dim(X)[2] # number of parameters
 
 ###
@@ -41,7 +42,6 @@ h <- 2
 
 ## Initial Values
 lambda.vec <- rgamma(n, h/2, h/2)
-#Lambda <- diag(lambda.vec)
 omega <- rgamma(1, d/2, eta/2)
 beta <- rmvnorm(1, m, solve(omega*K))
 
@@ -58,7 +58,7 @@ nu.star <- n + d
 eta.star <- eta + t(y)%*%(lambda.vec%d*%y) + t(m)%*%K%*%m - (t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)%*%solve(t(X)%*%(lambda.vec%d*%X) + K)%*%t(t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)
 
 ## Progress Bar
-pb <- progress_bar$new(format = " impressing James [:bar] :percent eta: :eta", total = M, clear = FALSE)
+pb <- progress_bar$new(format = " impressing James(?) [:bar] :percent eta: :eta", total = M, clear = FALSE)
 
 ###
 ### Gibbs Sampler
@@ -95,3 +95,27 @@ for(i in 2:M){
     eta.star <- eta + t(y)%*%(lambda.vec%d*%y) + t(m)%*%K%*%m - (t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)%*%solve(t(X)%*%(lambda.vec%d*%X) + K)%*%t(t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)
 
 }
+
+###
+### "Interesting Plot"
+###
+
+post.means <- apply(lambda.save, 1, mean)
+df <- data.frame(cbind(y, post = 1/post.means))
+ggplot(df, aes(x = y, y = post)) + theme_classic() + geom_point(alpha = 0.25) + ggtitle("Relative Variance for Each Data Point") + ylab(expression(1/lambda[i]))
+
+###
+### Obtain 95% Intervals
+###
+
+## Using our method
+ci(beta.save[2, ], method = "HDI")
+
+###
+### Residual Analysis
+###
+
+res <- y - X%*%apply(beta.save, 1, mean)
+png("hist.png")
+hist(res, main = "Histogram of Model Residuals", breaks = 50, col = "black", border = "white")
+dev.off()
