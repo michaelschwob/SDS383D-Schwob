@@ -8,7 +8,9 @@
 set.seed(702)
 library(ggplot2)
 library(mvtnorm)
-M <- 10000 # number of iterations
+library(progress)
+library(fields)
+M <- 1000 # number of iterations
 
 ###
 ### Get Data
@@ -53,7 +55,7 @@ beta.save[, 1] <- beta
 
 ## Computations
 nu.star <- n + d
-eta.star <- eta + t(y)%*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%*%Lambda%*%X + t(m)%*%K)%*%solve(t(X)%*%Lambda%*%X + K)%*%t(t(y)%*%Lambda%*%X + t(m)%*%K)
+eta.star <- eta + t(y)%d*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%d*%Lambda%*%X + t(m)%*%K)%*%solve(t(X)%d*%Lambda%*%X + K)%*%t(t(y)%d*%Lambda%*%X + t(m)%*%K)
 
 ## work on the whole multiply by a diagonal matrix thing
 
@@ -66,7 +68,7 @@ pb <- progress_bar$new(format = " downloading [:bar] :percent eta: :eta", total 
 
 for(i in 2:M){
     
-    pb.tick()
+    pb$tick() # update progress bar
 
     ###
     ### Sample beta
