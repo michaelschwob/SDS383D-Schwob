@@ -41,7 +41,7 @@ h <- 2
 
 ## Initial Values
 lambda.vec <- rgamma(n, h/2, h/2)
-Lambda <- diag(lambda.vec)
+#Lambda <- diag(lambda.vec)
 omega <- rgamma(1, d/2, eta/2)
 beta <- rmvnorm(1, m, solve(omega*K))
 
@@ -55,12 +55,10 @@ beta.save[, 1] <- beta
 
 ## Computations
 nu.star <- n + d
-eta.star <- eta + t(y)%d*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%d*%Lambda%*%X + t(m)%*%K)%*%solve(t(X)%d*%Lambda%*%X + K)%*%t(t(y)%d*%Lambda%*%X + t(m)%*%K)
-
-## work on the whole multiply by a diagonal matrix thing
+eta.star <- eta + t(y)%*%(lambda.vec%d*%y) + t(m)%*%K%*%m - (t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)%*%solve(t(X)%*%(lambda.vec%d*%X) + K)%*%t(t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)
 
 ## Progress Bar
-pb <- progress_bar$new(format = " downloading [:bar] :percent eta: :eta", total = M, clear = FALSE)
+pb <- progress_bar$new(format = " executing some pretty awesome code [:bar] :percent eta: :eta", total = M, clear = FALSE)
 
 ###
 ### Gibbs Sampler
@@ -74,8 +72,8 @@ for(i in 2:M){
     ### Sample beta
     ###
 
-    tmp.Sig <- solve(omega.save[i-1]*t(X)%*%Lambda%*%X + omega.save[i-1]*K)
-    tmp.mn <- tmp.Sig%*%(omega.save[i-1]*t(X)%*%Lambda%*%y + omega.save[i-1]*K%*%m)
+    tmp.Sig <- solve(omega.save[i-1]*t(X)%*%(lambda.vec%d*%X) + omega.save[i-1]*K)
+    tmp.mn <- tmp.Sig%*%(omega.save[i-1]*t(X)%*%(lambda.vec%d*%y) + omega.save[i-1]*K%*%m)
     beta.save[, i] <- rmvnorm(1, tmp.mn, tmp.Sig)
 
     ###
@@ -93,7 +91,7 @@ for(i in 2:M){
     }
 
     ## New computations
-    Lambda <- diag(lambda.save[, i])
-    eta.star <- eta + t(y)%*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%*%Lambda%*%X + t(m)%*%K)%*%solve(t(X)%*%Lambda%*%X + K)%*%t(t(y)%*%Lambda%*%X + t(m)%*%K)
+    lambda.vec <- lambda.save[, i]
+    eta.star <- eta + t(y)%*%(lambda.vec%d*%y) + t(m)%*%K%*%m - (t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)%*%solve(t(X)%*%(lambda.vec%d*%X) + K)%*%t(t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)
 
 }
