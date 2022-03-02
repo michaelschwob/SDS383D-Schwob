@@ -57,11 +57,16 @@ eta.star <- eta + t(y)%*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%*%Lambda%*%X + t(m)%*
 
 ## work on the whole multiply by a diagonal matrix thing
 
+## Progress Bar
+pb <- progress_bar$new(format = " downloading [:bar] :percent eta: :eta", total = M, clear = FALSE)
+
 ###
 ### Gibbs Sampler
 ###
 
 for(i in 2:M){
+    
+    pb.tick()
 
     ###
     ### Sample beta
