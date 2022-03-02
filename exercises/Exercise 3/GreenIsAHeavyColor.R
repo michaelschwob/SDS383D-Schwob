@@ -103,13 +103,20 @@ for(i in 2:M){
 post.means <- apply(lambda.save, 1, mean)
 df <- data.frame(cbind(y, post = 1/post.means))
 ggplot(df, aes(x = y, y = post)) + theme_classic() + geom_point(alpha = 0.25) + ggtitle("Relative Variance for Each Data Point") + ylab(expression(1/lambda[i]))
+ggsave("RelativeVariance.png")
 
 ###
-### Obtain 95% Intervals
+### Compare 95% Intervals
 ###
+
+## Use other file
+setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 3")
+source("GoGreen.R")
+setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 3")
 
 ## Using our method
 ci(beta.save[2, ], method = "HDI")
+
 
 ###
 ### Residual Analysis
@@ -119,3 +126,4 @@ res <- y - X%*%apply(beta.save, 1, mean)
 png("hist.png")
 hist(res, main = "Histogram of Model Residuals", breaks = 50, col = "black", border = "white")
 dev.off()
+

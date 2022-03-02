@@ -6,7 +6,7 @@
 ###
 
 set.seed(702)
-setwd(paste0(getwd(), "/SDS383D-Schwob/data"))
+setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/data")
 library(mvtnorm) # sample from multivariate t distribution
 library(bayestestR) # calculate Bayesian credible intervals
 
