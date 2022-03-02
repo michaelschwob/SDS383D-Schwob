@@ -51,13 +51,9 @@ omega.save[1] <- omega
 beta.save <- matrix(0, p, M)
 beta.save[, 1] <- beta
 
-
 ## Computations
 nu.star <- n + d
-Lambda.star <- t(X)%*%Lambda%*%X + K
-mu.star <- solve(Lambda.star)%*%(t(X)%*%Lambda%*%y + t(K)%*%m)
 eta.star <- eta + t(y)%*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%*%Lambda%*%X + t(m)%*%K)%*%solve(t(X)%*%Lambda%*%X + K)%*%t(t(y)%*%Lambda%*%X + t(m)%*%K)
-Sigma.star <- drop(eta.star/nu.star)*solve(Lambda.star)
 
 ###
 ### Gibbs Sampler
@@ -69,18 +65,26 @@ for(i in 2:M){
     ### Sample beta
     ###
 
-    tmp.Sig <- solve(omega[i-1]*t(X)%*%Lambda%*%X + omega[i-1]%*%K) ## remember to update Lambda after lambda_i's
-    tmp.mn <- tmp.Sig%*%(omega[i-1]*t(X)%*%Lambda%*%y + omega[i-1]*K%*%m)
+    tmp.Sig <- solve(omega.save[i-1]*t(X)%*%Lambda%*%X + omega.save[i-1]%*%K)
+    tmp.mn <- tmp.Sig%*%(omega.save[i-1]*t(X)%*%Lambda%*%y + omega.save[i-1]*K%*%m)
     beta.save[, i] <- rmvnorm(1, tmp.mn, tmp.Sig)
 
     ###
     ### Sample omega
     ###
 
-    
+    omega.save[i] <- rgamma(1, nu.star/2, rate = eta.star/2)
 
     ###
     ### Sample lambda_i
     ###
+
+    for(j in 1:n){
+        lambda.save[j, i] <- rgamma(1, (h+1)/2, rate = (omega.save[i]*(y[i] - X[i, ]%*%beta.save[, i])^2 + h)/2) ## may need tranposes
+    }
+
+    ## New computations
+    Lambda <- diag(lambda.save[, i])
+    eta.star <- eta + t(y)%*%Lambda%*%y + t(m)%*%K%*%m - (t(y)%*%Lambda%*%X + t(m)%*%K)%*%solve(t(X)%*%Lambda%*%X + K)%*%t(t(y)%*%Lambda%*%X + t(m)%*%K)
 
 }
