@@ -38,7 +38,7 @@ K <- diag(K)
 m <- rep(1, p)
 d <- 1
 eta <- 1
-h <- 5 # was 2
+h <- 1 # was 2
 
 ## Initial Values
 lambda.vec <- rgamma(n, h/2, h/2)
@@ -59,6 +59,8 @@ eta.star <- eta + t(y)%*%(lambda.vec%d*%y) + t(m)%*%K%*%m - (t(y)%*%(lambda.vec%
 
 ## Progress Bar
 pb <- progress_bar$new(format = " impressing James(?) [:bar] :percent eta: :eta", total = M, clear = FALSE)
+
+omega.lambda <- matrix(0, n, M)
 
 ###
 ### Gibbs Sampler
@@ -87,13 +89,14 @@ for(i in 2:M){
     ###
 
     for(j in 1:n){
-        lambda.save[j, i] <- rgamma(1, (h+1)/2, rate = (omega.save[i]*(y[i] - X[i, ]%*%beta.save[, i])^2 + h)/2) ## may need tranposes
+        lambda.save[j, i] <- rgamma(1, (h+1)/2, rate = (omega.save[i]*(y[i] - X[i, ]%*%beta.save[, i])^2 + h)/2)
     }
 
     ## New computations
     lambda.vec <- lambda.save[, i]
     eta.star <- eta + t(y)%*%(lambda.vec%d*%y) + t(m)%*%K%*%m - (t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)%*%solve(t(X)%*%(lambda.vec%d*%X) + K)%*%t(t(y)%*%(lambda.vec%d*%X) + t(m)%*%K)
 
+    omega.lambda[, i] <- omega.save[i]*lambda.save[, i]
 }
 
 ###
@@ -137,3 +140,11 @@ hist(res.new, breaks = 50, col = rgb(1, 0, 0, 0.25), add = TRUE)
 #abline(v = 0, col = "red")
 legend("topright", legend = c("Homoskedastic", "Heteroskedastic"), col = c("red", "blue"), lty = 1)
 dev.off()
+
+sigmai.mean <- apply(omega.lambda, 1, mean)
+sigmai.mean <- 1/sqrt(sigmai.mean)
+hist(drop(res.new)/sigmai.mean, breaks = 30)
+
+post.lambdas <- apply(lambda.save, 1, mean)
+
+hist(post.lambdas)
