@@ -27,8 +27,8 @@ for(i in 1:P){
 }
 
 df <- data.frame(cbind(n.stud, y.avg))
-ggplot(df, aes(x = n.stud, y = y.avg)) + theme_classic() + geom_point() + xlab("School Size") + ylab("School-level Average") + ggtitle("School-level Averages v. School Size")
-ggsave("math_b.png")
+p1 <- ggplot(df, aes(x = n.stud, y = y.avg)) + theme_classic() + geom_point() + xlab("School Size") + ylab("School-level Average") + ggtitle("School-level Averages v. School Size")
+ggsave("math_b.png", p1)
 
 ###
 ### (c) Gibbs Sampling
@@ -37,12 +37,13 @@ ggsave("math_b.png")
 ## Initializations
 M <- 1000
 s2.save <- t2.save <- mu.save <- rep(0, M)
-theta.save <- matrix(0, P, M)
+theta.save <- kappa.save <- matrix(0, P, M)
 s2.save[1] <- t2.save[1] <- 1
 mu.save[1] <- 0
 theta.save[, 1] <- rep(30, P)
+kappa.save[, 1] <- t2.save[1]*n.stud/(t2.save[1]*n.stud + 1)
 
-pb <- progress_bar$new(format = " doing cool math stuff [:bar] :percent eta: :eta", total = M, clear = FALSE)
+pb <- progress_bar$new(format = " doing cool stat stuff [:bar] :percent eta: :eta", total = M, clear = FALSE)
 
 for(m in 2:M){
 
@@ -89,7 +90,6 @@ for(m in 2:M){
     ###
 
     tmp.var.vec <- 1/(n.stud/s2.save[m] + 1/(t2.save[m]*s2.save[m]))
-    #tmp.var <- diag(tmp.var.vec)
     tmp.b <- rep(0, P)
     for(i in 1:P){
         tmp.b[i] <- sum(filter(data, school == i)[, 2])/s2.save[m] + mu.save[m]/(t2.save[m]*s2.save[m])
@@ -97,4 +97,29 @@ for(m in 2:M){
     tmp.mn <- tmp.var.vec %d*% tmp.b
 
     theta.save[, m] <- rmvnorm(1, tmp.mn, diag(tmp.var.vec))
+
+    ###
+    ### (d) Compute kappa
+    ###
+
+    kappa.save[, m] <- t2.save[m]*n.stud/(t2.save[m]*n.stud + 1)
 }
+
+###
+### Diagnostics
+###
+
+n.burn <- M/10
+plot(mu.save[n.burn:M], type = "l", main = "Trace Plot for mu")
+plot(t2.save[n.burn:M], type = "l", main = "Trace Plot for tau^2")
+plot(s2.save[n.burn:M], type = "l", main = "Trace Plot for sigma^2")
+
+###
+### (d) Plot shrinkage coefficient kappa
+###
+
+kappa.post <- apply(kappa.save[, n.burn:M], 1, mean)
+
+df <- data.frame(cbind(n.stud, kappa.post))
+p2 <- ggplot(df, aes(x = n.stud, y = kappa.post)) + theme_classic() + geom_point() + xlab("School Size") + ylab("Shrinkage Coefficient") + ggtitle("Shrinkage Coefficient v. School Size")
+ggsave("kappa_graph.png", p2)
