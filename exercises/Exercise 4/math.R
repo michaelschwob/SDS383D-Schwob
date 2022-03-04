@@ -7,6 +7,9 @@
 
 library(dplyr)
 library(ggplot2)
+library(mvtnorm)
+library(fields)
+library(progress)
 
 setwd(paste0(getwd(), "/SDS383D-Schwob/data"))
 data  <- read.csv("mathtest.csv")
@@ -16,8 +19,9 @@ setwd(paste0("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 4"))
 ### (b) Plot number of students v. school average
 ###
 
-n.stud <- y.avg <- rep(0, length(unique(data[, 1])))
-for(i in 1:length(n.stud)){
+P <- length(unique(data[, 1]))
+n.stud <- y.avg <- rep(0, P)
+for(i in 1:P){
     n.stud[i] <- nrow(filter(data, school == i))
     y.avg[i] <- mean(filter(data, school == i)[, 2]) 
 }
@@ -25,3 +29,72 @@ for(i in 1:length(n.stud)){
 df <- data.frame(cbind(n.stud, y.avg))
 ggplot(df, aes(x = n.stud, y = y.avg)) + theme_classic() + geom_point() + xlab("School Size") + ylab("School-level Average") + ggtitle("School-level Averages v. School Size")
 ggsave("math_b.png")
+
+###
+### (c) Gibbs Sampling
+###
+
+## Initializations
+M <- 1000
+s2.save <- t2.save <- mu.save <- rep(0, M)
+theta.save <- matrix(0, P, M)
+s2.save[1] <- t2.save[1] <- 1
+mu.save[1] <- 0
+theta.save[, 1] <- rep(30, P)
+
+pb <- progress_bar$new(format = " doing cool math stuff [:bar] :percent eta: :eta", total = M, clear = FALSE)
+
+for(m in 2:M){
+
+    pb$tick()
+
+    ###
+    ### Sample mu
+    ###
+
+    mu.save[m] <- rnorm(1, sum(theta.save[, m-1])/P, sqrt(t2.save[m-1]*s2.save[m-1]/P))
+
+    ###
+    ### Sample sigma^2
+    ###
+
+    tmp.shape <- (sum(n.stud) + P)/2
+    tmp.sum1 <- tmp.sum2 <- 0
+    for(i in 1:P){
+        for(j in 1:n.stud[i]){
+            yij <- data$mathscore[which(data$school == i)[j]]
+            tmp.sum1 <- tmp.sum1 + (yij - theta.save[i, m-1])^2/2
+        }
+        tmp.sum2 <- tmp.sum2 + (theta.save[i, m-1] - mu.save[m])^2/(2*t2.save[m-1])
+    }
+    tmp.scale <- tmp.sum1 + tmp.sum2
+
+    s2.save[m] <- 1/rgamma(1, tmp.shape, scale = tmp.scale)
+
+    ###
+    ### Sample tau^2
+    ###
+
+    tmp.shape <- (P + 1)/2
+    tmp.sum1 <- 0
+    for(i in 1:P){
+        tmp.sum1 <- tmp.sum1 + (theta.save[i, m-1] - mu.save[m])^2/(2*s2.save[m])
+    }
+    tmp.scale <- tmp.sum1 + 1/2
+
+    t2.save[m] <- 1/rgamma(1, tmp.shape, scale = tmp.scale)
+
+    ###
+    ### Sample theta
+    ###
+
+    tmp.var.vec <- 1/(n.stud/s2.save[m] + 1/(t2.save[m]*s2.save[m]))
+    #tmp.var <- diag(tmp.var.vec)
+    tmp.b <- rep(0, P)
+    for(i in 1:P){
+        tmp.b[i] <- sum(filter(data, school == i)[, 2])/s2.save[m] + mu.save[m]/(t2.save[m]*s2.save[m])
+    }
+    tmp.mn <- tmp.var.vec %d*% tmp.b
+
+    theta.save[, m] <- rmvnorm(1, tmp.mn, diag(tmp.var.vec))
+}
