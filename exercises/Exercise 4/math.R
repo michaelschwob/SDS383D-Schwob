@@ -41,7 +41,7 @@ mu.save[1] <- 0
 theta.save[, 1] <- rep(30, P)
 kappa.save[, 1] <- t2.save[1]*n.stud/(t2.save[1]*n.stud + 1)
 
-pb <- mrs.pb("stat thingy", M)
+pb <- mrs.pb("stat stuff", M)
 
 for(m in 2:M){
 
@@ -107,10 +107,12 @@ for(m in 2:M){
 ### Diagnostics
 ###
 
+pdf("traces.pdf")
 n.burn <- M/10
 plot(mu.save[n.burn:M], type = "l", main = "Trace Plot for mu")
 plot(t2.save[n.burn:M], type = "l", main = "Trace Plot for tau^2")
 plot(s2.save[n.burn:M], type = "l", main = "Trace Plot for sigma^2")
+dev.off()
 
 ###
 ### (d) Plot shrinkage coefficient kappa
