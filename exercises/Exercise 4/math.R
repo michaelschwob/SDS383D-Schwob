@@ -5,11 +5,9 @@
 ### Set-up
 ###
 
-library(dplyr)
-library(ggplot2)
-library(mvtnorm)
-library(fields)
-library(progress)
+library(mrs)
+mrs.load()
+mrs.seed()
 
 setwd(paste0(getwd(), "/SDS383D-Schwob/data"))
 data  <- read.csv("mathtest.csv")
@@ -43,7 +41,7 @@ mu.save[1] <- 0
 theta.save[, 1] <- rep(30, P)
 kappa.save[, 1] <- t2.save[1]*n.stud/(t2.save[1]*n.stud + 1)
 
-pb <- progress_bar$new(format = " doing cool stat stuff [:bar] :percent eta: :eta", total = M, clear = FALSE)
+pb <- mrs.pb("stat thingy", M)
 
 for(m in 2:M){
 
