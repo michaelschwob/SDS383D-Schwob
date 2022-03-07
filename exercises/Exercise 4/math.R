@@ -8,7 +8,6 @@
 library(mrs)
 mrs.load()
 mrs.seed()
-library(invgamma)
 
 setwd(paste0(getwd(), "/SDS383D-Schwob/data"))
 data  <- read.csv("mathtest.csv")
@@ -108,12 +107,14 @@ for(m in 2:M){
 ### Diagnostics
 ###
 
-pdf("traces.pdf")
 n.burn <- M/10
-plot(mu.save[n.burn:M], type = "l", main = "Trace Plot for mu")
-plot(t2.save[n.burn:M], type = "l", main = "Trace Plot for tau^2")
-plot(s2.save[n.burn:M], type = "l", main = "Trace Plot for sigma^2")
-dev.off()
+
+tp1 <- mrs.trace(mu.save, "mu", 1, n.burn)
+tp2 <- mrs.trace(t2.save, "tau^2", 1, n.burn)
+tp3 <- mrs.trace(s2.save, "sigma^2", 1, n.burn)
+arr <- ggarrange(tp1, tp2, tp3, ncol = 1)
+ggsave("traces.png", arr)
+
 
 ###
 ### (d) Plot shrinkage coefficient kappa
