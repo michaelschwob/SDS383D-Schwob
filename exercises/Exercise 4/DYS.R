@@ -6,6 +6,8 @@ data <- read.csv("mathtest.csv",header=TRUE)
 
 library(dplyr)
 library(invgamma)
+library(mrs)
+
 y_school <- data %>%
   group_by(school) %>%
   summarize(bar_y = mean(mathscore), n_data = n())
@@ -25,7 +27,11 @@ theta[1,] <- rep(1,P)
 mu[1] <- sigma2[1] <- tau2[1] <- 1
 kappa[1,] <- 1/(tau2[1]*Ni + 1)
 
+pb <- mrs.pb("Testing Yunshan's Code", M)
+
 for (m in 2:M){
+
+    pb$tick()
   tilde_sig <- 1/(Ni/sigma2[m-1] + 1/(tau2[m-1]*sigma2[m-1]))
   tilde_mu <- tilde_sig*(Ni*ybar/sigma2[m-1] + mu[m-1]/(tau2[m-1]*sigma2[m-1]))
   for (i in 1:P){
@@ -50,18 +56,18 @@ for (m in 2:M){
 
 burnin <- 1000
 iters <- burnin:M
-jpeg("figures/mu_tra.jpeg",width=600,height=600)
+jpeg("mu_tra.jpeg",width=600,height=600)
 plot(iters,mu[iters],xlab="iterations",ylab=expression(mu),bty="l",type="l")
 dev.off()
-jpeg("figures/sig_tra.jpeg",width=600,height=600)
+jpeg("sig_tra.jpeg",width=600,height=600)
 plot(iters,sigma2[iters],xlab="iterations",ylab=expression(sigma^2),bty="l",type="l")
 dev.off()
-jpeg("figures/tau_tra.jpeg",width=600,height=600)
+jpeg("tau_tra.jpeg",width=600,height=600)
 plot(iters,tau2[iters],xlab="iterations",ylab=expression(tau^2),bty="l",type="l")
 dev.off()
 
 kappa_post <- apply(kappa[iters,],2,mean)
-jpeg("figures/kappa.jpeg",width=600,height=600)
+jpeg("kappa.jpeg",width=600,height=600)
 plot(Ni,kappa_post,xlab="school sample size",ylab=expression(kappa_i))
 dev.off()
 
@@ -70,6 +76,6 @@ for (i in 1:P){
   var_school[i] <- var(data[which(data$school==i),2])
 }
 
-jpeg("figures/var_school.jpeg",width=600,height=600)
+jpeg("var_school.jpeg",width=600,height=600)
 hist(var_school, breaks = 20)
 dev.off()
