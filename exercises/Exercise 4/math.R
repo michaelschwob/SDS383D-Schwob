@@ -8,6 +8,7 @@
 library(mrs)
 mrs.load()
 mrs.seed()
+library(invgamma)
 
 setwd(paste0(getwd(), "/SDS383D-Schwob/data"))
 data  <- read.csv("mathtest.csv")
@@ -39,7 +40,7 @@ theta.save <- kappa.save <- matrix(0, P, M)
 s2.save[1] <- t2.save[1] <- 1
 mu.save[1] <- 0
 theta.save[, 1] <- rep(1, P)
-kappa.save[, 1] <- 1/(t2.save[1]*n.stud + 1) # numerator was t2.save[1]*n.stud
+kappa.save[, 1] <- 1/(t2.save[1]*n.stud + 1)
 
 pb <- mrs.pb("stat stuff", M)
 
@@ -68,7 +69,7 @@ for(m in 2:M){
     }
     tmp.scale <- tmp.sum1 + tmp.sum2
 
-    s2.save[m] <- 1/rgamma(1, tmp.shape, scale = tmp.scale)
+    s2.save[m] <- rinvgamma(1, tmp.shape, tmp.scale)
 
     ###
     ### Sample tau^2
@@ -81,7 +82,7 @@ for(m in 2:M){
     }
     tmp.scale <- tmp.sum1 + 1/2
 
-    t2.save[m] <- 1/rgamma(1, tmp.shape, scale = tmp.scale)
+    t2.save[m] <- rinvgamma(1, tmp.shape, tmp.scale)
 
     ###
     ### Sample theta
@@ -100,7 +101,7 @@ for(m in 2:M){
     ### (d) Compute kappa
     ###
 
-    kappa.save[, m] <- 1/(t2.save[m]*n.stud + 1) # numerator was t2.save[m]*n.stud
+    kappa.save[, m] <- 1/(t2.save[m]*n.stud + 1)
 }
 
 ###
