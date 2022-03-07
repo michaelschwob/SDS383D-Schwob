@@ -38,8 +38,8 @@ s2.save <- t2.save <- mu.save <- rep(0, M)
 theta.save <- kappa.save <- matrix(0, P, M)
 s2.save[1] <- t2.save[1] <- 1
 mu.save[1] <- 0
-theta.save[, 1] <- rep(30, P)
-kappa.save[, 1] <- t2.save[1]*n.stud/(t2.save[1]*n.stud + 1)
+theta.save[, 1] <- rep(1, P)
+kappa.save[, 1] <- 1/(t2.save[1]*n.stud + 1) # numerator was t2.save[1]*n.stud
 
 pb <- mrs.pb("stat stuff", M)
 
@@ -100,7 +100,7 @@ for(m in 2:M){
     ### (d) Compute kappa
     ###
 
-    kappa.save[, m] <- t2.save[m]*n.stud/(t2.save[m]*n.stud + 1)
+    kappa.save[, m] <- 1/(t2.save[m]*n.stud + 1) # numerator was t2.save[m]*n.stud
 }
 
 ###
