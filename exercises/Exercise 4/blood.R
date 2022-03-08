@@ -47,7 +47,7 @@ s2.save <- t2.save <- mu.save <- beta.save <- rep(0, M)
 theta.save <- matrix(0, P, M)
 s2.save[1] <- t2.save[1] <- beta.save[1] <- 1
 mu.save[1] <- mean(data[, 2])
-theta.save[, 1] <- rep(mean(data[, 2]), P)
+#theta.save[, 1] <- rep(mean(data[, 2]), P)
 
 s2.beta <- 1 # are these...
 mu.beta <- 0 # ... good?
@@ -56,7 +56,8 @@ x <- c(rep(0, 10), rep(1, 10))
 
 n.stud <- rep(0, P)
 for(i in 1:P){
-    n.stud[i] <- nrow(filter(data, subject == i)) # check that it works properly
+    n.stud[i] <- nrow(filter(data, subject == i))
+    theta.save[i, 1] <- mean(filter(data, subject == i)[, 2]) 
 }
 
 pb <- mrs.pb("drawing blood", M)
