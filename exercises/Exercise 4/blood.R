@@ -46,13 +46,13 @@ M <- 1000
 s2.save <- t2.save <- mu.save <- beta.save <- rep(0, M)
 theta.save <- matrix(0, P, M)
 s2.save[1] <- t2.save[1] <- beta.save[1] <- 1
-mu.save[1] <- 0
-theta.save[, 1] <- rep(1, P)
+mu.save[1] <- mean(data[, 2])
+theta.save[, 1] <- rep(mean(data[, 2]), P)
 
 s2.beta <- 1 # are these...
 mu.beta <- 0 # ... good?
 
-x <- data[, 4]
+x <- c(rep(0, 10), rep(1, 10))
 
 n.stud <- rep(0, P)
 for(i in 1:P){
@@ -80,6 +80,7 @@ for(m in 2:M){
     for(i in 1:P){
         for(j in 1:n.stud[i]){
             yij <- data$systolic[which(data$subject == i)[j]] # check
+            #cat(yij,  " ")
             tmp.sum1 <- tmp.sum1 + (yij - theta.save[i, m-1])^2/2
         }
         tmp.sum2 <- tmp.sum2 + (theta.save[i, m-1] - mu.save[m] - beta.save[m-1]*x[i])^2/(2*t2.save[m-1])
