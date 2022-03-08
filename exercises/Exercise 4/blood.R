@@ -52,7 +52,7 @@ theta.save[, 1] <- rep(1, P)
 s2.beta <- 1 # are these...
 mu.beta <- 0 # ... good?
 
-#x and y !!
+x <- data[, 4]
 
 n.stud <- rep(0, P)
 for(i in 1:P){
@@ -108,7 +108,7 @@ for(m in 2:M){
     tmp.var.vec <- 1/(n.stud/s2.save[m] + 1/(t2.save[m]*s2.save[m]))
     tmp.b <- rep(0, P)
     for(i in 1:P){
-        tmp.b[i] <- sum(filter(data, subject == i)[, 2])/s2.save[m] + (mu.save[m] + beta.save[m-1]*x[i])/(t2.save[m]*s2.save[m]) # check if working
+        tmp.b[i] <- sum(filter(data, subject == i)[, 2])/s2.save[m] + (mu.save[m] + beta.save[m-1]*x[i])/(t2.save[m]*s2.save[m])
     }
     tmp.mn <- tmp.var.vec %d*% tmp.b
 
