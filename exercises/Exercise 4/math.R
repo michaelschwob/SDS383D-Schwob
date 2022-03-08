@@ -1,4 +1,4 @@
-## title: Introduction to Hierarchical Models
+## title: Introduction to Hierarchical Models (pt. 1)
 ## author: Michael R. Schwob
 
 ###
