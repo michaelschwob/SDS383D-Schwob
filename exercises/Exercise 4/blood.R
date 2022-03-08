@@ -46,8 +46,6 @@ M <- 1000
 s2.save <- t2.save <- mu.save <- beta.save <- rep(0, M)
 theta.save <- matrix(0, P, M)
 s2.save[1] <- t2.save[1] <- beta.save[1] <- 1
-mu.save[1] <- mean(data[, 2])
-#theta.save[, 1] <- rep(mean(data[, 2]), P)
 
 s2.beta <- 1 # are these...
 mu.beta <- 0 # ... good?
@@ -59,6 +57,7 @@ for(i in 1:P){
     n.stud[i] <- nrow(filter(data, subject == i))
     theta.save[i, 1] <- mean(filter(data, subject == i)[, 2]) 
 }
+mu.save[1] <- mean(theta.save[, 1])
 
 pb <- mrs.pb("drawing blood", M)
 
@@ -120,10 +119,10 @@ for(m in 2:M){
     ### Sample beta ; added
     ###
 
-    tmp.var <- 1/(sum(x^2)/t2.save[m]/s2.save[m] + 1/s2.beta)
+    tmp.var <- 1/(sum(x^2)/(t2.save[m]*s2.save[m]) + 1/s2.beta)
     tmp.sum <- 0
     for(i in 1:P){
-        tmp.sum <- tmp.sum + (theta.save[i, m] - mu.save[m])*x[i]
+        tmp.sum <- tmp.sum + (theta.save[i, m] - mu.save[m])*x[i]/(t2.save[m]*s2.save[m])
     }
     tmp.mn <- tmp.var*(tmp.sum + mu.beta/s2.beta)
 
@@ -144,3 +143,14 @@ tp4 <- mrs.trace(beta.save, "beta", 1, n.burn)
 arr <- ggarrange(tp1, tp2, tp3, tp4, ncol = 1)
 ggsave("traces_blood.png", arr)
 
+
+###
+### Beta Inference
+###
+
+png("beta_histogram.png")
+hist(beta.save, main = expression(paste("Histogram of Posterior Distribution of ", beta)), xlab = expression(beta))
+dev.off()
+
+mean(beta.save[n.burn:M])
+sd(beta.save[n.burn:M])
