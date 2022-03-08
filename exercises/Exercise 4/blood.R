@@ -79,7 +79,7 @@ for(m in 2:M){
     tmp.sum1 <- tmp.sum2 <- 0
     for(i in 1:P){
         for(j in 1:n.stud[i]){
-            yij <- data$systolic[which(data$school == i)[j]]
+            yij <- data$systolic[which(data$subject == i)[j]] # check
             tmp.sum1 <- tmp.sum1 + (yij - theta.save[i, m-1])^2/2
         }
         tmp.sum2 <- tmp.sum2 + (theta.save[i, m-1] - mu.save[m] - beta.save[m-1]*x[i])^2/(2*t2.save[m-1])
