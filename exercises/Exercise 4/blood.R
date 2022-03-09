@@ -47,7 +47,7 @@ s2.save <- t2.save <- mu.save <- beta.save <- rep(0, M)
 theta.save <- matrix(0, P, M)
 s2.save[1] <- t2.save[1] <- beta.save[1] <- 1
 
-s2.beta <- 1 # are these...
+s2.beta <- 10^9 # are these...
 mu.beta <- 0 # ... good?
 
 x <- c(rep(0, 10), rep(1, 10))
@@ -170,3 +170,15 @@ for(i in 1:P){
 
 template <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, ncol = 4, nrow = 5)
 ggsave("plotsd.png", template)
+
+post.means <- mean(beta.save)
+post.sd <- sd(beta.save)
+
+###
+### Autocorrelation Plot
+###
+
+ind2 <- dfd %>% filter(subject==2)
+png("acf.png")
+acf(ind2[, 2], main = "Autocorrelation Plot for Subject 2")
+dev.off()
