@@ -154,3 +154,19 @@ dev.off()
 
 mean(beta.save[n.burn:M])
 sd(beta.save[n.burn:M])
+
+###
+### (d) Are measurements within individuals independent?
+###
+
+dfd <- data.frame(data)
+dfd$date <- format(as.Date(dfd$date,format="%Y-%m-%d"), format = "%d")
+
+for(i in 1:P){
+    ind <- ifelse(i <= 10, 1, 2)
+    tmp <- ggplot(dfd, aes(x = date, y = systolic, group = 1)) + geom_line(dfd %>% filter(subject==i), mapping = aes(x = date, y = systolic), col = ind) + theme_classic() + xlab("Date") + ylab("Systolic Measurement") + ggtitle(paste("Subject ", i)) + theme(plot.title = element_text(hjust = 0.5))
+    assign(paste0("p", i), tmp)
+}
+
+template <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, ncol = 4, nrow = 5)
+ggsave("plotsd.png", template)
