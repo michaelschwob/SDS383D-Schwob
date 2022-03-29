@@ -3,11 +3,17 @@
 ### with a Case Study in Price Elasticity of Demand (PED)
 ###
 
+## Note: To run this, you need the mrs R package,  which can be installed with the following steps:
+##       1. install and load the "devtools" R package
+##       2. run "install_github("michaelschwob/mrs")"
+##       3. load mrs library as you usually would
+
 ###
 ### Set up
 ###
 
 library(mrs)
+library(ggpubr)
 mrs.load()
 mrs.seed()
 
@@ -68,7 +74,7 @@ for(i in 1:n){
     beta.save[i, , 1] <- beta.i.0
 }  
 
-pb <- mrs.pb("Making that Chesse: ", n.mcmc)
+pb <- mrs.pb("Making that Cheese: ", n.mcmc)
 
 ###
 ### Gibbs Sampler
@@ -90,7 +96,6 @@ for(k in 2:n.mcmc){
 
         beta.save[i, , k] <- rmvnorm(1, mu.star, Sig.star)
     }
-    
 
     ###
     ### Update mu.beta
@@ -154,11 +159,63 @@ for(k in 2:n.mcmc){
     }else{
         b.save[k] <- b.save[k-1] # retain value
     }
-
 }
 
 ###
-### Inference
+### Trace Plots for a, b, mu.beta,  and s2_p
 ###
 
-sig2.df <- data.frame()
+a.trace <- mrs.trace(a.save, "a")
+b.trace <- mrs.trace(b.save, "b")
+
+plots <- ggarrange(a.trace, b.trace, ncol = 1)
+ggsave("traces.png", plots)
+
+mu.trace.1 <- mrs.trace(mu.beta.save[1, ], "mu[beta][1]") 
+mu.trace.2 <- mrs.trace(mu.beta.save[2, ], "mu[beta][2]") 
+mu.trace.3 <- mrs.trace(mu.beta.save[3, ], "mu[beta][3]") 
+mu.trace.4 <- mrs.trace(mu.beta.save[4, ], "mu[beta][4]")
+
+sp.trace.1 <- mrs.trace(s2.save[1, ], "s[1]^2")
+sp.trace.2 <- mrs.trace(s2.save[2, ], "s[2]^2")
+sp.trace.3 <- mrs.trace(s2.save[3, ], "s[3]^2")
+sp.trace.4 <- mrs.trace(s2.save[4, ], "s[4]^2")
+
+plots2 <- ggarrange(mu.trace.1, mu.trace.2, mu.trace.3, mu.trace.4, sp.trace.1, sp.trace.2, sp.trace.3, sp.trace.4, nrow = 4, ncol = 2)
+ggsave("traces2.png", plots2)
+
+###
+### Inference on sig2
+###
+
+sig2.post <- rep(0, n)
+
+for(i in 1:n){
+    tmp.vec <- sig2.save[i, ]
+    outliers <- boxplot(tmp.vec, plot=FALSE)$out
+    tmp.vec <- tmp.vec[-which(tmp.vec %in% outliers)]
+    sig2.post[i] <- mean(tmp.vec)
+}
+
+sig2.df <- data.frame(sig2 = sig2.post, n = 1:n)
+p2 <- ggplot(sig2.df, aes(x = n, y = sig2)) + geom_point(color = "red") + theme_classic() + ggtitle("Log-normal Variance Per Store") + xlab("Store") + ylab(expression(sigma[i]^2))
+ggsave("sig2_perstore.png", p2)
+
+###
+### Histogram of Beta values
+###
+
+for(p in 1:4){
+    tmp.df <- data.frame(beta = c(beta.save[, p, (.3*n.mcmc):n.mcmc]))
+    tmp.plot <- ggplot(tmp.df, aes(x = beta)) + geom_histogram(color = "white", fill = "#BF5700") + theme_classic() + ggtitle("Histogram of Posterior Values") +xlab(paste0("beta", p))
+    assign(paste0("plot", p), tmp.plot)
+}
+betas <- ggarrange(plot1, plot2, plot3, plot4, nrow = 2, ncol = 2)
+ggsave("beta_histograms.png", betas)
+
+###
+### Convergence Diagnostics
+###
+
+library(coda)
+raftery.diag(a.save)
