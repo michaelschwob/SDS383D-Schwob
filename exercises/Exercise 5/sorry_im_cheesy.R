@@ -93,7 +93,7 @@ for(k in 2:n.mcmc){
         Sig.star.inv <- t(X[1:(N.i[i]), , i])%*%X[1:(N.i[i]), , i]/sig2.save[i, k-1] + solve(tmp.Sig)
         Sig.star <- solve(Sig.star.inv)
 
-        mu.star <- Sig.star%*%( t(X[1:(N.i[i]), , i])%*%Y[i, 1:(N.i[i])]/sig2.save[i, k-1] + solve(tmp.Sig)%*%mu.beta.save[, k-1]  ) # removed Y tranpose !!
+        mu.star <- Sig.star%*%(t(X[1:(N.i[i]), , i])%*%Y[i, 1:(N.i[i])]/sig2.save[i, k-1] + solve(tmp.Sig)%*%mu.beta.save[, k-1])
 
         beta.save[i, , k] <- rmvnorm(1, mu.star, Sig.star)
     }
@@ -101,8 +101,6 @@ for(k in 2:n.mcmc){
     ###
     ### Update mu.beta
     ###
-
-    #mu.beta.save[, k] <- rmvnorm(1, rep(mean(beta.save[, , k]), 4), tmp.Sig/n) # does this seem right??
     
     mu.vec <- rep(0, 4)
     for(i in 1:4){
@@ -131,9 +129,9 @@ for(k in 2:n.mcmc){
     ###
 
     for(i in 1:n){
-        tmp.a <- a.save[k-1]/2 + N.i[i]/2 # swich to N.i[i] ; was + 1/2
+        tmp.a <- a.save[k-1]/2 + N.i[i]/2
         tmp.mat <- matrix(Y[i, 1:N.i[i]]) - X[1:N.i[i], , i]%*%beta.save[i, , k]
-        tmp.b <- 1/2*(b.save[k-1] + t(tmp.mat)%*%tmp.mat) # tranposed beta and Y
+        tmp.b <- 1/2*(b.save[k-1] + t(tmp.mat)%*%tmp.mat)
 
         sig2.save[i, k] <- rinvgamma(1, tmp.a, tmp.b)
     }
@@ -153,8 +151,6 @@ for(k in 2:n.mcmc){
         a.save[k] <- a.save[k-1] # retain value
     }
 
-    a.save[k] = 0.5
-
     ### 
     ### Update b
     ###
@@ -170,24 +166,10 @@ for(k in 2:n.mcmc){
         b.save[k] <- b.save[k-1] # retain value
     }
 
-    b.save[k] = 0.5
-
-    #  # update a
-    # a_grid <- seq(1,10,length.out=500)
-    # pa <- sapply(a_grid, FUN = function(x) {sum((-x/2-1)*log(sig2.save[, k]))} ) 
-    # pa <- pa - mean(pa) # to avoid things in exp() going to Inf
-    # pa <- exp(pa)
-    # a.save[k] <- sample(a_grid, 1, prob = pa)
-  
-    # # update b
-    # b_grid <- seq(0.1,10,length.out=500)
-    # pb <- sapply(b_grid,FUN= function(x) {exp(-sum(x/sig2.save[, k]/2))} ) 
-    # b.save[k] <- sample(b_grid, 1, prob = pb)
-
 }
 
 ###
-### Trace Plots for a, b, mu.beta,  and s2_p
+### Trace Plots for a, b, mu.beta, and s2_p
 ###
 
 a.trace <- mrs.trace(a.save, "a")
@@ -243,7 +225,6 @@ ggsave("beta_histograms.png", betas)
 ###
 
 ## beta 2
-
 beta2.post <- rep(0, n)
 
 for(i in 1:n){
@@ -257,8 +238,19 @@ beta2.df <- data.frame(beta2 = beta2.post, n = 1:n)
 p3 <- ggplot(beta2.df, aes(x = n, y = beta2)) + geom_point(color = "red") + theme_classic() + ggtitle("Beta[2] Per Store") + xlab("Store") + ylab(expression(beta[2]))
 ggsave("beta2_perstore.png", p3)
 
-
 ## beta 3
+beta3.post <- rep(0, n)
+
+for(i in 1:n){
+    tmp.vec <- beta.save[i, 4, ]
+    outliers <- boxplot(tmp.vec, plot=FALSE)$out
+    tmp.vec <- tmp.vec[-which(tmp.vec %in% outliers)]
+    beta3.post[i] <- mean(tmp.vec)
+}
+
+beta3.df <- data.frame(beta3 = beta3.post, n = 1:n)
+p4 <- ggplot(beta3.df, aes(x = n, y = beta3)) + geom_point(color = "red") + theme_classic() + ggtitle("Beta[3] Per Store") + xlab("Store") + ylab(expression(beta[3]))
+ggsave("beta3_perstore.png", p4)
 
 ###
 ### Convergence Diagnostics
