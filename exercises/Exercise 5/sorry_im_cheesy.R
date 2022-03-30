@@ -253,3 +253,29 @@ ggsave("beta3_perstore.png", p4)
 
 library(coda)
 raftery.diag(a.save)
+
+###
+### Sim Data
+###
+
+a <- mean(a.save)
+b <- mean(b.save)
+sig2 <- apply(sig2.save, 1, mean)
+s2 <- apply(s2.save, 1, mean)
+mu.beta <- apply(mu.beta.save, 1, mean)
+
+
+beta.save <- array(0, dim = c(n, 4, n.mcmc))
+beta.matrix <- matrix(0, n, 4)
+for(i in 1:4){
+    for(j in 1:n){
+        beta.matrix[j, i] <- mean(beta.save[j, i, ])
+    }
+}
+
+Y <- matrix(0, n, N.i[i])
+for(i in 1:n){
+    for(j in 1:(N.i[i])){
+        Y[i, j] <- rnorm(1, t(X[j, , i])%*%beta.matrix[i, ], sqrt(sig2[i]))
+    }
+}
