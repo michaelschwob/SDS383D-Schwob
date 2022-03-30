@@ -37,7 +37,7 @@ for(i in 1:n){ # for each store
     N.i[i] <- dim(tmp.data)[1] # number of observations for store i
     Y[i, 1:(N.i[i])] <- log(tmp.data$vol) # stores log(quantity)
     for(j in 1:N.i[i]){
-        X[j, , i] <- c(1, log(tmp.data$vol[j]), tmp.data$disp[j], log(tmp.data$vol[j])*tmp.data$disp[j])
+        X[j, , i] <- c(1, log(tmp.data$price[j]), tmp.data$disp[j], log(tmp.data$price[j])*tmp.data$disp[j])
     }
 }
 
@@ -101,7 +101,14 @@ for(k in 2:n.mcmc){
     ### Update mu.beta
     ###
 
-    mu.beta.save[, k] <- rmvnorm(1, rep(mean(beta.save[, , k]), 4), tmp.Sig/n) # does this seem right??
+    #mu.beta.save[, k] <- rmvnorm(1, rep(mean(beta.save[, , k]), 4), tmp.Sig/n) # does this seem right??
+    
+    mu.vec <- rep(0, 4)
+    for(i in 1:4){
+        mu.vec[i] <- mean(beta.save[, i, k])
+    }
+
+    mu.beta.save[, k] <- rmvnorm(1, mu.vec, tmp.Sig/n)
 
     ###
     ### Update s2.p
@@ -111,7 +118,7 @@ for(k in 2:n.mcmc){
         tmp.a <- n/2 + 1/2
         tmp.sum <- 0
         for(i in 1:n){
-            tmp.sum <- tmp.sum + (beta.save[i, p, k] - mu.beta.save[p, k])^2 # tranposed beta.save
+            tmp.sum <- tmp.sum + (beta.save[i, p, k] - mu.beta.save[p, k])^2
         }
         tmp.b <- 1/2*(1 + tmp.sum)
         s2.save[p, k] <- rinvgamma(1, tmp.a, tmp.b)
@@ -207,11 +214,19 @@ ggsave("sig2_perstore.png", p2)
 
 for(p in 1:4){
     tmp.df <- data.frame(beta = c(beta.save[, p, (.3*n.mcmc):n.mcmc]))
-    tmp.plot <- ggplot(tmp.df, aes(x = beta)) + geom_histogram(color = "white", fill = "#BF5700") + theme_classic() + ggtitle("Histogram of Posterior Values") +xlab(paste0("beta", p))
+    tmp.plot <- ggplot(tmp.df, aes(x = beta)) + geom_histogram(color = "white", fill = "#BF5700") + theme_classic() + ggtitle("Histogram of Posterior Values") +xlab(paste0("beta", p-1))
     assign(paste0("plot", p), tmp.plot)
 }
 betas <- ggarrange(plot1, plot2, plot3, plot4, nrow = 2, ncol = 2)
 ggsave("beta_histograms.png", betas)
+
+###
+### Effect on Demand Curve Due to Advertising
+###
+
+## beta 2
+
+## beta 3
 
 ###
 ### Convergence Diagnostics
