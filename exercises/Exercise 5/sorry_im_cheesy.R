@@ -131,7 +131,7 @@ for(k in 2:n.mcmc){
     ###
 
     for(i in 1:n){
-        tmp.a <- a.save[k-1]/2 + 1/2 # swich to N.i[i]
+        tmp.a <- a.save[k-1]/2 + N.i[i]/2 # swich to N.i[i] ; was + 1/2
         tmp.mat <- matrix(Y[i, 1:N.i[i]]) - X[1:N.i[i], , i]%*%beta.save[i, , k]
         tmp.b <- 1/2*(b.save[k-1] + t(tmp.mat)%*%tmp.mat) # tranposed beta and Y
 
@@ -153,6 +153,8 @@ for(k in 2:n.mcmc){
         a.save[k] <- a.save[k-1] # retain value
     }
 
+    a.save[k] = 0.5
+
     ### 
     ### Update b
     ###
@@ -167,6 +169,8 @@ for(k in 2:n.mcmc){
     }else{
         b.save[k] <- b.save[k-1] # retain value
     }
+
+    b.save[k] = 0.5
 
     #  # update a
     # a_grid <- seq(1,10,length.out=500)
