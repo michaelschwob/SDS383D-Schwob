@@ -52,6 +52,7 @@ Sigma.0 <- diag(sp2.0)
 mu.beta.0 <- rnorm(4, 0, 2)
 beta.i.0 <- rmvnorm(1, mu.beta.0, Sigma.0)
 s2i.0 <- rinvgamma(n, 0.5, 0.5)
+s2i.0 <- rep(1, n) # added
 
 ###
 ### Save Matrices
@@ -130,7 +131,7 @@ for(k in 2:n.mcmc){
     ###
 
     for(i in 1:n){
-        tmp.a <- a.save[k-1]/2 + 1/2
+        tmp.a <- a.save[k-1]/2 + 1/2 # swich to N.i[i]
         tmp.mat <- matrix(Y[i, 1:N.i[i]]) - X[1:N.i[i], , i]%*%beta.save[i, , k]
         tmp.b <- 1/2*(b.save[k-1] + t(tmp.mat)%*%tmp.mat) # tranposed beta and Y
 
@@ -166,6 +167,19 @@ for(k in 2:n.mcmc){
     }else{
         b.save[k] <- b.save[k-1] # retain value
     }
+
+    #  # update a
+    # a_grid <- seq(1,10,length.out=500)
+    # pa <- sapply(a_grid, FUN = function(x) {sum((-x/2-1)*log(sig2.save[, k]))} ) 
+    # pa <- pa - mean(pa) # to avoid things in exp() going to Inf
+    # pa <- exp(pa)
+    # a.save[k] <- sample(a_grid, 1, prob = pa)
+  
+    # # update b
+    # b_grid <- seq(0.1,10,length.out=500)
+    # pb <- sapply(b_grid,FUN= function(x) {exp(-sum(x/sig2.save[, k]/2))} ) 
+    # b.save[k] <- sample(b_grid, 1, prob = pb)
+
 }
 
 ###
@@ -225,6 +239,20 @@ ggsave("beta_histograms.png", betas)
 ###
 
 ## beta 2
+
+beta2.post <- rep(0, n)
+
+for(i in 1:n){
+    tmp.vec <- beta.save[i, 3, ]
+    outliers <- boxplot(tmp.vec, plot=FALSE)$out
+    tmp.vec <- tmp.vec[-which(tmp.vec %in% outliers)]
+    beta2.post[i] <- mean(tmp.vec)
+}
+
+beta2.df <- data.frame(beta2 = beta2.post, n = 1:n)
+p3 <- ggplot(beta2.df, aes(x = n, y = beta2)) + geom_point(color = "red") + theme_classic() + ggtitle("Beta[2] Per Store") + xlab("Store") + ylab(expression(beta[2]))
+ggsave("beta2_perstore.png", p3)
+
 
 ## beta 3
 
