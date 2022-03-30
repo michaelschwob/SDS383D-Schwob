@@ -3,11 +3,6 @@
 ### with a Case Study in Price Elasticity of Demand (PED)
 ###
 
-## Note: To run this, you need the mrs R package,  which can be installed with the following steps:
-##       1. install and load the "devtools" R package
-##       2. run "install_github("michaelschwob/mrs")"
-##       3. load mrs library as you usually would
-
 ###
 ### Set up
 ###
@@ -75,7 +70,7 @@ for(i in 1:n){
     beta.save[i, , 1] <- beta.i.0
 }  
 
-pb <- mrs.pb("Making that Cheese: ", n.mcmc)
+pb <- mrs.pb("Sorry, I'm cheesy.", n.mcmc)
 
 ###
 ### Gibbs Sampler
