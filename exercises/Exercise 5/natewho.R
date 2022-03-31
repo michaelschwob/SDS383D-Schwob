@@ -10,6 +10,7 @@
 library(mrs)
 mrs.load()
 library(LaplacesDemon)
+library(truncnorm)
 mrs.seed()
 
 data <- read.csv("/home/mikel/Desktop/Code/SDS383D-Schwob/data/polls.csv")
@@ -48,3 +49,21 @@ for(i in 1:n){
         X[j, , i] <- c(1, as.numeric(tmp.data[j, 3:12]))
     }
 }
+
+###
+### Set Starting Values
+###
+
+beta.star <- matrix(rnorm((P+1)*n, 0, 10^4), P+1, n)
+B.star <- diag(P+1)
+alpha <- matrix(0, P+1, n)
+for(i in 1:n){
+    alpha[, i] <- rmvnorm(1, beta.star[, i], B.star)
+}
+Z <- matrix(NA, n, max)
+for(i in 1:n){
+    for(j in 1:N.i[i]){
+        Z[i, j] <- ifelse(Y[i, j] == 1, rtruncnorm(1, a = 0, mean = 0, sd = 1), rtruncnorm(1, b = 0, mean = 0, sd = 1))
+    }
+}
+
