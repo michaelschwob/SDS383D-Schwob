@@ -172,3 +172,6 @@ your.matrix <- X3
 
 rankifremoved <- sapply(1:ncol(your.matrix), function (x) qr(your.matrix[,-x])$rank)
 which(rankifremoved == max(rankifremoved))
+
+NJ <- data %>% filter(state == "NJ")
+CT <- data %>% filter(state == "CT")
