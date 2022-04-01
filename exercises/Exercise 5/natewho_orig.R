@@ -155,26 +155,9 @@ for(i in 1:n){
     assign(paste0("t", i), traces)
 }
 
-#t2
-#t4
-#t8
-#t9
-#t14
-
-### Compare t2 (good) and t3 (bad)
-N.i[2] # more observations
-N.i[3] # less observations
-diff <- X[,,2]-X[,,3]
-X2 <- as.matrix(X[1:N.i[2], , 2])
-X3 <- X[1:N.i[3], , 3]
-
-your.matrix <- X3
-
-rankifremoved <- sapply(1:ncol(your.matrix), function (x) qr(your.matrix[,-x])$rank)
-which(rankifremoved == max(rankifremoved))
-
-NJ <- data %>% filter(state == "NJ")
-CT <- data %>% filter(state == "CT")
+#2, 4, 8, 9, 14
+ggsave("texas.png", t8)
+ggsave("newyork.png", t4)
 
 ###
 ### Plot Alphas Per State
@@ -219,6 +202,4 @@ for(p in 2:(P+1)){ # for each parameter
 plots <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow = 3, ncol = 3) + ggtitle("Posterior Means of Coefficients Per State")
 ggsave("coefficient_estimates.png", plots)
 
-###
-### Individual State Plots
-###
+
