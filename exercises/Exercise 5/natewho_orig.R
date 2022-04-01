@@ -198,9 +198,9 @@ tmp.df <- data.frame(State = tmp.names, beta = tmp.mean)
 pos.points <- data.frame(State = tmp.names[which(tmp.mean>0)], beta = tmp.mean[which(tmp.mean>0)])
 neg.points <- data.frame(State = tmp.names[which(tmp.mean <= 0)], beta = tmp.mean[which(tmp.mean <= 0)])
 tmp.plot <- ggplot(tmp.df, aes(x = State)) + geom_point(aes(y = beta)) + theme_classic() + ylab(bquote(mu)) + geom_hline(yintercept = 0, linetype = "dashed") + geom_segment(pos.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "red") + geom_segment(neg.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "blue")
-assign(paste0("p", p), tmp.plot)
+assign(paste0("p", p), tmp.plot) + theme(axis.text.x = element_text(angle = 90))
 
-for(p in 2:P){ # for each parameter
+for(p in 2:(P+1)){ # for each parameter
     ind <- rep(0, n)
     for(i in 1:n){
         tmp.mean[i] <- mean(alpha.save[p, i, n.burn:n.mcmc]) # obtain posterior mean for each state
@@ -213,8 +213,12 @@ for(p in 2:P){ # for each parameter
     tmp.df <- data.frame(State = tmp.names, beta = tmp.mean)
     pos.points <- data.frame(State = tmp.names[which(tmp.mean>0)], beta = tmp.mean[which(tmp.mean>0)])
     neg.points <- data.frame(State = tmp.names[which(tmp.mean <= 0)], beta = tmp.mean[which(tmp.mean <= 0)])
-    tmp.plot <- ggplot(tmp.df, aes(x = State)) + geom_point(aes(y = beta)) + theme_classic() + ylab(bquote(beta[.(p)])) + geom_hline(yintercept = 0, linetype = "dashed") + geom_segment(pos.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "red") + geom_segment(neg.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "blue")
+    tmp.plot <- ggplot(tmp.df, aes(x = State)) + geom_point(aes(y = beta)) + theme_classic() + ylab(bquote(beta[.(p)])) + geom_hline(yintercept = 0, linetype = "dashed") + geom_segment(pos.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "red") + geom_segment(neg.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "blue") + theme(axis.text.x = element_text(angle = 90))
     assign(paste0("p", p), tmp.plot)
 }
 plots <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow = 3, ncol = 3) + ggtitle("Posterior Means of Coefficients Per State")
 ggsave("coefficient_estimates.png", plots)
+
+###
+### Individual State Plots
+###
