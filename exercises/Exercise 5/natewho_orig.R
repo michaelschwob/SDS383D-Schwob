@@ -35,7 +35,7 @@ names <- unique(data$state)
 n <- length(names)
 biggest.sample <- names(which.max(table(data$state)))
 max <- sum(data$state == biggest.sample) # largest number of observations per store
-P <- 7 # was 10
+P <- 8 # was 10
 
 Y <- matrix(NA, n, max)
 X <- array(NA, dim = c(max, P+1, n))
@@ -46,7 +46,7 @@ for(i in 1:n){
     N.i[i] <- dim(tmp.data)[1] # number of observations for store i
     Y[i, 1:(N.i[i])] <- tmp.data$bush # states voters
     for(j in 1:N.i[i]){
-        X[j, , i] <- c(1, as.numeric(tmp.data[j, c(3, 5, 6, 7, 9, 10, 11)])) # was 3:12
+        X[j, , i] <- c(1, as.numeric(tmp.data[j, c(3, 4, 5, 6, 7, 9, 10, 11)]))
     }
 }
 
@@ -175,3 +175,29 @@ which(rankifremoved == max(rankifremoved))
 
 NJ <- data %>% filter(state == "NJ")
 CT <- data %>% filter(state == "CT")
+
+###
+### Plot Alphas Per State
+###
+
+n.burn <- .3*n.mcmc
+
+tmp.mean <- rep(0, n)
+for(p in 1:P){ # for each parameter
+    ind <- rep(0, n)
+    for(i in 1:n){
+        tmp.mean[i] <- mean(alpha.save[p, i, n.burn:n.mcmc]) # obtain posterior mean for each state
+        if(abs(tmp.mean[i]) < 10){
+            ind[i] <- 1 # we will plot this one
+        }
+    }
+    tmp.names <- names[which(ind == 1)]
+    tmp.mean <- tmp.mean[which(ind == 1)]
+    tmp.df <- data.frame(State = tmp.names, beta = tmp.mean)
+    pos.points <- data.frame(State = tmp.names[which(tmp.mean>0)], beta = tmp.mean[which(tmp.mean>0)])
+    neg.points <- data.frame(State = tmp.names[which(tmp.mean <= 0)], beta = tmp.mean[which(tmp.mean <= 0)])
+    tmp.plot <- ggplot(tmp.df, aes(x = State)) + geom_point(aes(y = beta)) + theme_classic() + ylab(bquote(beta[.(p)])) + geom_hline(yintercept = 0, linetype = "dashed") + geom_segment(pos.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "red") + geom_segment(neg.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "blue")
+    assign(paste0("p", p), tmp.plot)
+}
+plots <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, nrow = 4, ncol = 2) + ggtitle("Posterior Means of Coefficients Per State")
+ggsave("coefficient_estimates.png", plots)

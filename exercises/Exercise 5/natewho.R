@@ -23,9 +23,9 @@ setwd(paste0(getwd(), "/SDS383D-Schwob/exercises/Exercise 5"))
 # only keep desired rows and omit observations that have NAs
 data <- data %>% select(-c(org, year, survey, weight)) %>% na.omit()
 
-# add indicator columns
-data <- data %>% mutate(Bacc = ifelse(data$edu == "Bacc", 1, 0), HS = ifelse(data$edu == "HS", 1, 0), SomeColl = ifelse(data$edu == "SomeColl", 1, 0), NoHS = ifelse(data$edu == "NoHS", 1, 0)) %>% select(-edu)
-data <- data %>% mutate(YA = ifelse(data$age == "18to29", 1, 0), A = ifelse(data$age == "30to44", 1, 0), MA = ifelse(data$age == "45to64", 1, 0), E = ifelse(data$age == "65plus", 1, 0)) %>% select(-age)
+# set values for categorical variables
+data <- data %>% mutate(Age = as.integer(factor(data$age))) %>% select(-age)
+data <- data %>% mutate(Edu = as.integer(factor(data$edu, levels = c("NoHS", "HS", "SomeColl", "Bacc")))) %>% select(-edu)
 
 ###
 ### Structure Data
@@ -35,7 +35,7 @@ names <- unique(data$state)
 n <- length(names)
 biggest.sample <- names(which.max(table(data$state)))
 max <- sum(data$state == biggest.sample) # largest number of observations per store
-P <- 7 # was 10
+P <- 4 # was 10
 
 Y <- matrix(NA, n, max)
 X <- array(NA, dim = c(max, P+1, n))
@@ -46,7 +46,7 @@ for(i in 1:n){
     N.i[i] <- dim(tmp.data)[1] # number of observations for store i
     Y[i, 1:(N.i[i])] <- tmp.data$bush # states voters
     for(j in 1:N.i[i]){
-        X[j, , i] <- c(1, as.numeric(tmp.data[j, c(3, 5, 6, 7, 9, 10, 11)])) # was 3:12
+        X[j, , i] <- c(1, as.numeric(tmp.data[j, 3:6]))
     }
 }
 
@@ -149,7 +149,7 @@ for(k in 2:n.mcmc){
 
 n.burn <- .3*n.mcmc
 for(i in 1:n){
-    tmp.df <- data.frame(iter = n.burn:n.mcmc, mu = alpha.save[1, i, n.burn:n.mcmc], beta1 = alpha.save[2, i, n.burn:n.mcmc], beta2 = alpha.save[3, i, n.burn:n.mcmc], beta3 = alpha.save[4, i, n.burn:n.mcmc], beta4 = alpha.save[5, i, n.burn:n.mcmc], beta5 = alpha.save[6, i, n.burn:n.mcmc], beta6 = alpha.save[7, i, n.burn:n.mcmc], beta7 = alpha.save[8, i, n.burn:n.mcmc])
+    tmp.df <- data.frame(iter = n.burn:n.mcmc, mu = alpha.save[1, i, n.burn:n.mcmc], beta1 = alpha.save[2, i, n.burn:n.mcmc], beta2 = alpha.save[3, i, n.burn:n.mcmc], beta3 = alpha.save[4, i, n.burn:n.mcmc], beta4 = alpha.save[5, i, n.burn:n.mcmc])
     plot.df <- tmp.df %>% gather(key = "variable", value = "value", -1)
     traces <- ggplot(plot.df, aes(x = iter, y = value)) + geom_line(aes(color = variable)) + theme_classic() + ggtitle("Trace Plots") + xlab("Iteration") + ylab("Value")
     assign(paste0("t", i), traces)
@@ -161,17 +161,19 @@ for(i in 1:n){
 #t9
 #t14
 
-### Compare t2 (good) and t3 (bad)
-N.i[2] # more observations
-N.i[3] # less observations
-diff <- X[,,2]-X[,,3]
-X2 <- as.matrix(X[1:N.i[2], , 2])
-X3 <- X[1:N.i[3], , 3]
+# ### Compare t2 (good) and t3 (bad)
+# N.i[2] # more observations
+# N.i[3] # less observations
+# diff <- X[,,2]-X[,,3]
+# X2 <- as.matrix(X[1:N.i[2], , 2])
+# X3 <- X[1:N.i[3], , 3]
 
-your.matrix <- X3
+# your.matrix <- X3
 
-rankifremoved <- sapply(1:ncol(your.matrix), function (x) qr(your.matrix[,-x])$rank)
-which(rankifremoved == max(rankifremoved))
+# rankifremoved <- sapply(1:ncol(your.matrix), function (x) qr(your.matrix[,-x])$rank)
+# which(rankifremoved == max(rankifremoved))
 
 NJ <- data %>% filter(state == "NJ")
 CT <- data %>% filter(state == "CT")
+
+ME <- data %>% filter(state == "ME")
