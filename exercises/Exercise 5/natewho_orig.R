@@ -183,7 +183,24 @@ CT <- data %>% filter(state == "CT")
 n.burn <- .3*n.mcmc
 
 tmp.mean <- rep(0, n)
-for(p in 1:P){ # for each parameter
+
+p <- 1
+ind <- rep(0, n)
+for(i in 1:n){
+    tmp.mean[i] <- mean(alpha.save[p, i, n.burn:n.mcmc]) # obtain posterior mean for each state
+if(abs(tmp.mean[i]) < 10){
+    ind[i] <- 1 # we will plot this one
+    }
+}
+tmp.names <- names[which(ind == 1)]
+tmp.mean <- tmp.mean[which(ind == 1)]
+tmp.df <- data.frame(State = tmp.names, beta = tmp.mean)
+pos.points <- data.frame(State = tmp.names[which(tmp.mean>0)], beta = tmp.mean[which(tmp.mean>0)])
+neg.points <- data.frame(State = tmp.names[which(tmp.mean <= 0)], beta = tmp.mean[which(tmp.mean <= 0)])
+tmp.plot <- ggplot(tmp.df, aes(x = State)) + geom_point(aes(y = beta)) + theme_classic() + ylab(bquote(mu)) + geom_hline(yintercept = 0, linetype = "dashed") + geom_segment(pos.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "red") + geom_segment(neg.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "blue")
+assign(paste0("p", p), tmp.plot)
+
+for(p in 2:P){ # for each parameter
     ind <- rep(0, n)
     for(i in 1:n){
         tmp.mean[i] <- mean(alpha.save[p, i, n.burn:n.mcmc]) # obtain posterior mean for each state
@@ -199,5 +216,5 @@ for(p in 1:P){ # for each parameter
     tmp.plot <- ggplot(tmp.df, aes(x = State)) + geom_point(aes(y = beta)) + theme_classic() + ylab(bquote(beta[.(p)])) + geom_hline(yintercept = 0, linetype = "dashed") + geom_segment(pos.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "red") + geom_segment(neg.points, mapping = aes(x = State, xend = State, y = 0, yend = beta), color = "blue")
     assign(paste0("p", p), tmp.plot)
 }
-plots <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, nrow = 4, ncol = 2) + ggtitle("Posterior Means of Coefficients Per State")
+plots <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow = 3, ncol = 3) + ggtitle("Posterior Means of Coefficients Per State")
 ggsave("coefficient_estimates.png", plots)
