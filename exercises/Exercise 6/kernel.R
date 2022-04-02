@@ -53,7 +53,7 @@ for(k in 1:length(H)){
     for(j in 1:length(x.grid)){
         tmp.sum <- 0
         for(i in 1:N){
-            tmp.sum <- tmp.sum + weight.ind(x.c[i], x.grid[j], h)*y[i]
+            tmp.sum <- tmp.sum + weight.ind(x.c[i], x.grid[j], h)*y.c[i]
         }
         smooth.y[j] <- tmp.sum
     }
