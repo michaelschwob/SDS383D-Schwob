@@ -14,7 +14,8 @@ gauss.kernel <- function(x){
 
 ## f(x) Function
 f.func <- function(x){
-    return(x^2+4*x^3-12)
+    #return(x^2+4*x^3-12)
+    return(x*sin(x))
 }
 
 ## Weighting Functions
@@ -31,8 +32,8 @@ noise <- rnorm(N, 0, 2)
 y <- f.func(x) + noise
 
 ## Center data
-x.c <- x - mean(x)
-y.c <- y - mean(y)
+x.c <- scale(x)
+y.c <- scale(y)
 
 H <- c(1, 2, 5, 10)
 M <- 1000
