@@ -15,28 +15,26 @@ setwd(paste0(getwd(), "/SDS383D-Schwob/exercises/Exercise 6"))
 source("smooth_like_Jagger.R")
 
 X.1 <- rnorm(700, 0, 40) # training data
-#X.1 <- scale(X.1)
-#X.2 <- rnorm(300, 0, 20) # testing data; must be within range of X.1
-X.2 <- sample(X.1, 300, replace = TRUE) # hear me out !!
+X.2 <- sample(X.1, 300, replace = TRUE)
 X <- c(X.1, X.2) # combine training and testing data
-noise <- rnorm(1000, 0, 3)
-Y <- f.func(X) + noise
+noise <- rnorm(1000, 0, 3) # add Gaussian noise
+Y <- f.func(X) + noise # obtain Y for training and testing data
 data <- cbind(Y, X)
-train.data <- data[1:700, ]
+train.data <- data[1:700, ] # typically, training data is 70-75% of data
 test.data <- data[701:1000, ]
 
-##############################################################
+H <- c(1, 2, 5, 10) # list of h values
+M <- 1000 # number of "new" points to fit kernel-estimator
+x.grid <- seq(-100, 100, length.out = M) # "new points"
 
-H <- c(1, 2, 5, 10)
-M <- 1000
-x.grid <- seq(-100, 100, length.out = M)
-MSPE <- rep(0, length(H))
+MSPE <- rep(0, length(H)) # initialize MSPE vector
 
-Y.matrix <- matrix(0, M, length(H) + 1)
-Y.matrix[, 1] <- f.func(x.grid)
+Y.matrix <- matrix(0, M, length(H) + 1) # save estimated y for plot
+Y.matrix[, 1] <- f.func(x.grid) # add "true" values for y
 
 pb <- mrs.pb("I need more validation. ", length(H))
 
+## For each value of h
 for(k in 1:length(H)){
 
     pb$tick()
@@ -66,10 +64,17 @@ for(k in 1:length(H)){
     Y.matrix[, k + 1] <- smooth.y
 }
 
+## Prepare Data for Plotting
 colnames(Y.matrix) <- c("true", "h = 1", "h = 2", "h = 5", "h = 10")
 plot.df <- data.frame(cbind(x.grid, Y.matrix[, -1]))
 plot.df <- plot.df %>% gather(key = "h", value = "value", -1)
 point.df <- data.frame(test.y = Y[701:1000], test.x = X.2)
 
+## Plot
 plot <- ggplot(plot.df, aes(x = x.grid, y = value)) + geom_line(aes(color = h)) + theme_classic() + ggtitle("Cross Validation with Different Bandwidths h") + xlab("x") + ylab("Estimated Value") + geom_point(point.df, mapping = aes(x = test.x, y = test.y), alpha = 0.6)
 ggsave("cross_validation.png", plot)
+
+###
+### (B)
+###
+
