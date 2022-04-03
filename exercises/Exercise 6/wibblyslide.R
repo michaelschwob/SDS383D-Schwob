@@ -12,7 +12,7 @@ setwd(paste0(getwd(), "/SDS383D-Schwob/exercises/Exercise 6"))
 ## (B)
 ##
 
-source("smooth_like_Jagger.R")
+#source("smooth_like_Jagger.R")
 
 ## Problem Set-up
 H <- c(1, 2, 5, 10) # list of h values
@@ -39,8 +39,26 @@ slide.func <- function(x){
     return(result)
 }
 
+## Weight Function
+weight.func <- function(x.old, x.new, h){
+    int <- (x.old - x.new)/h
+    weight <- gauss.kernel(int)/h
+    return(weight)
+}
+
+## Kernel Function
+gauss.kernel <- function(x){
+    sol <- exp(-(x)^2/2)/sqrt(2*pi)
+    return(sol)
+}
+
 ## Run Cross Validation in Four Scenarios
 for(m in 1:4){
+
+    ## Reset
+    Y <- Y.test <- 0
+    Y.matrix <- matrix(0, M, length(H) + 1) # save estimated y for each scenario's plot
+    
 
     ## Function Selection
     if(m == 1){
@@ -78,8 +96,10 @@ for(m in 1:4){
         ## Fit kernel-regression estimator to training data
         for(j in 1:length(x.grid)){
             tmp.sum <- 0
+            sum.test <- rep(0, length(X.1))
             for(i in 1:length(X.1)){
-                tmp.sum <- tmp.sum + weight.ind(X.1[i], x.grid[j], h)*Y[i]
+                tmp.sum <- tmp.sum + weight.func(X.1[i], x.grid[j], h)*Y[i]
+                sum.test[i] <- weight.func(X.1[i], x.grid[j], h)*Y[i]
             }
             smooth.y[j] <- tmp.sum
         }
@@ -109,6 +129,9 @@ for(m in 1:4){
 
 }
 
+## Save Plot
 plots <- ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 ggsave("scenarios.png", plots)
+
+## Get ASEP
 ASEP
