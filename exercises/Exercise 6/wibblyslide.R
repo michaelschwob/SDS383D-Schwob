@@ -114,7 +114,7 @@ for(m in 1:4){
         for(i in 1:length(X.2)){
             ASEP.tmp <- ASEP.tmp + (Y.test[i] - approx.func(X.2[i]))^2
         }
-        ASEP[k, m] <- ASEP.tmp/length(X.2) # or should this be "/500" based on write-up?
+        ASEP[k, m] <- ASEP.tmp/length(X.2)
 
         Y.matrix[, k + 1] <- smooth.y
     }
