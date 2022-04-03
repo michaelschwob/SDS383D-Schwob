@@ -12,16 +12,14 @@ setwd(paste0(getwd(), "/SDS383D-Schwob/exercises/Exercise 6"))
 ## (B)
 ##
 
-#source("smooth_like_Jagger.R")
-
 ## Problem Set-up
-H <- c(1, 2, 5, 10) # list of h values
+H <- c(0.1, 0.2, 0.5, 1) # list of h values
 ASEP <- matrix(0, length(H), 4) # initialize average squared error in prediction (ASEP) matrix
 
 X.1 <- runif(375, 0, 1) # testing data
 X.2 <- runif(125, 0, 1) # training data
-low.noise <- rnorm(500, 0, 0.05)
-high.noise <- rnorm(500, 0, 0.1)
+low.noise <- rnorm(500, 0, 0.25)
+high.noise <- rnorm(500, 0, 1)
 
 M <- 1000 # number of "new" points to fit kernel-estimator
 x.grid <- seq(0, 1, length.out = M) # "new points"
@@ -58,7 +56,6 @@ for(m in 1:4){
     ## Reset
     Y <- Y.test <- 0
     Y.matrix <- matrix(0, M, length(H) + 1) # save estimated y for each scenario's plot
-    
 
     ## Function Selection
     if(m == 1){
@@ -95,12 +92,21 @@ for(m in 1:4){
 
         ## Fit kernel-regression estimator to training data
         for(j in 1:length(x.grid)){
-            tmp.sum <- 0
-            sum.test <- rep(0, length(X.1))
+            
+            weights <- rep(0, length(X.1)) # vector of weights
+
+            ## Remember to normalize the weights
             for(i in 1:length(X.1)){
-                tmp.sum <- tmp.sum + weight.func(X.1[i], x.grid[j], h)*Y[i]
-                sum.test[i] <- weight.func(X.1[i], x.grid[j], h)*Y[i]
+                weights[i] <- weight.func(X.1[i], x.grid[j], h)
             }
+            weights <- weights/sum(weights)
+
+            ## Obtain sum for estimated value
+            tmp.sum <- 0
+            for(i in 1:length(X.1)){
+                tmp.sum <- tmp.sum + weights[i]*Y[i]
+            }
+
             smooth.y[j] <- tmp.sum
         }
 
