@@ -32,7 +32,7 @@ MSPE <- rep(0, length(H)) # initialize MSPE vector
 Y.matrix <- matrix(0, M, length(H) + 1) # save estimated y for plot
 Y.matrix[, 1] <- f.func(x.grid) # add "true" values for y
 
-pb <- mrs.pb("I need more validation. ", length(H))
+pb <- mrs.pb("Validate me, please. ", length(H))
 
 ## For each value of h
 for(k in 1:length(H)){
@@ -40,7 +40,7 @@ for(k in 1:length(H)){
     pb$tick()
 
     h <- H[k]
-    smooth.y <- test.y <- rep(0, M)
+    smooth.y <- rep(0, M)
 
     ## Fit kernel-regression estimator to training data
     for(j in 1:length(x.grid)){
@@ -73,8 +73,3 @@ point.df <- data.frame(test.y = Y[701:1000], test.x = X.2)
 ## Plot
 plot <- ggplot(plot.df, aes(x = x.grid, y = value)) + geom_line(aes(color = h)) + theme_classic() + ggtitle("Cross Validation with Different Bandwidths h") + xlab("x") + ylab("Estimated Value") + geom_point(point.df, mapping = aes(x = test.x, y = test.y), alpha = 0.6)
 ggsave("cross_validation.png", plot)
-
-###
-### (B)
-###
-

@@ -8,7 +8,7 @@ mrs.seed()
 
 ## Kernel Function
 gauss.kernel <- function(x){
-    sol <- exp(-x^2/2)/sqrt(2*pi)
+    sol <- exp(-(x)^2/2)/sqrt(2*pi)
     return(sol)
 }
 
