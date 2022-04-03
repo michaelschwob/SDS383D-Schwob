@@ -19,6 +19,7 @@ LOOCV <- matrix(0, length(H), 4) # initialize average squared error in predictio
 X.1 <- runif(375, 0, 1) # testing data
 X.2 <- runif(125, 0, 1) # training data
 X <- c(X.1, X.2)
+H <- X%*%solve(t(X)%*%X)%*%t(X)
 low.noise <- rnorm(500, 0, 0.25)
 high.noise <- rnorm(500, 0, 0.8)
 
@@ -54,29 +55,21 @@ gauss.kernel <- function(x){
 ## Run Cross Validation in Four Scenarios
 for(m in 1:4){
 
-    ## Reset
-    Y <- Y.test <- 0
-    Y.matrix <- matrix(0, M, length(H) + 1) # save estimated y for each scenario's plot
-
     ## Function Selection
     if(m == 1){
-        Y <- wibbly.func(X.1) + high.noise[1:375] # train Y
-        Y.test <- wibbly.func(X.2) + high.noise[376:500] # test y
+        Y <- wibbly.func(X) + high.noise
         Y.matrix[, 1] <- wibbly.func(x.grid) # add "true" values for y
     }
     if(m == 2){
-        Y <- wibbly.func(X.1) + low.noise[1:375] # train Y
-        Y.test <- wibbly.func(X.2) + low.noise[376:500] # test y
+        Y <- wibbly.func(X) + low.noise
         Y.matrix[, 1] <- wibbly.func(x.grid) # add "true" values for y
     }
     if(m == 3){
-        Y <- slide.func(X.1) + high.noise[1:375] # train Y
-        Y.test <- slide.func(X.2) + high.noise[376:500] # test y
+        Y <- slide.func(X) + high.noise
         Y.matrix[, 1] <- slide.func(x.grid) # add "true" values for y
     }
     if(m == 4){
-        Y <- slide.func(X.1) + low.noise[1:375] # train Y
-        Y.test <- slide.func(X.2) + low.noise[376:500] # test y
+        Y <- slide.func(X) + low.noise
         Y.matrix[, 1] <- slide.func(x.grid) # add "true" values for y
     }
 
@@ -94,17 +87,17 @@ for(m in 1:4){
         ## Fit kernel-regression estimator to training data
         for(j in 1:length(x.grid)){
             
-            weights <- rep(0, length(X.1)) # vector of weights
+            weights <- rep(0, length(X)) # vector of weights
 
             ## Remember to normalize the weights
-            for(i in 1:length(X.1)){
-                weights[i] <- weight.func(X.1[i], x.grid[j], h)
+            for(i in 1:length(X)){
+                weights[i] <- weight.func(X[i], x.grid[j], h)
             }
             weights <- weights/sum(weights)
 
             ## Obtain sum for estimated value
             tmp.sum <- 0
-            for(i in 1:length(X.1)){
+            for(i in 1:length(X)){
                 tmp.sum <- tmp.sum + weights[i]*Y[i]
             }
 
@@ -116,10 +109,12 @@ for(m in 1:4){
 
         ## Obtain LOOCV from test data
         LOOCV.tmp <- 0
-        for(i in 1:length(X.2)){
-            LOOCV.tmp <- LOOCV.tmp + (Y.test[i] - approx.func(X.2[i]))^2
+        for(i in 1:length(X)){
+            num.tmp <- Y[i] - approx.func(X[i])
+            den.tmp <- 1 - H[i, i]
+            LOOCV.tmp <- LOOCV.tmp + (num.tmp/den.tmp)^2
         }
-        LOOCV[k, m] <- LOOCV.tmp/length(X.2) # or should this be "/500" based on write-up?
+        LOOCV[k, m] <- LOOCV.tmp/length(X)
 
         Y.matrix[, k + 1] <- smooth.y
     }
@@ -138,7 +133,7 @@ for(m in 1:4){
 
 ## Save Plot
 plots <- ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
-ggsave("scenarios.png", plots)
+ggsave("leaveOutAllTheRest.png", plots)
 
 ## Get LOOCV
 LOOCV
