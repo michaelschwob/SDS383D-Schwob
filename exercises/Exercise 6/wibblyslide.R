@@ -53,10 +53,6 @@ gauss.kernel <- function(x){
 ## Run Cross Validation in Four Scenarios
 for(m in 1:4){
 
-    ## Reset
-    Y <- Y.test <- 0
-    Y.matrix <- matrix(0, M, length(H) + 1) # save estimated y for each scenario's plot
-
     ## Function Selection
     if(m == 1){
         Y <- wibbly.func(X.1) + high.noise[1:375] # train Y

@@ -9,15 +9,16 @@ mrs.seed()
 setwd(paste0(getwd(), "/SDS383D-Schwob/exercises/Exercise 6"))
 
 ##
-## (B)
+## (C)
 ##
 
 ## Problem Set-up
 H <- c(0.1, 0.2, 0.5, 1) # list of h values
-ASEP <- matrix(0, length(H), 4) # initialize average squared error in prediction (ASEP) matrix
+LOOCV <- matrix(0, length(H), 4) # initialize average squared error in prediction (LOOCV) matrix
 
 X.1 <- runif(375, 0, 1) # testing data
 X.2 <- runif(125, 0, 1) # training data
+X <- c(X.1, X.2)
 low.noise <- rnorm(500, 0, 0.25)
 high.noise <- rnorm(500, 0, 0.8)
 
@@ -113,12 +114,12 @@ for(m in 1:4){
         ## Approximate Function
         approx.func <- approxfun(x.grid, smooth.y, rule = 2) # rule = 2 is needed to extrapolate (get rid of NAs)
 
-        ## Obtain ASEP from test data
-        ASEP.tmp <- 0
+        ## Obtain LOOCV from test data
+        LOOCV.tmp <- 0
         for(i in 1:length(X.2)){
-            ASEP.tmp <- ASEP.tmp + (Y.test[i] - approx.func(X.2[i]))^2
+            LOOCV.tmp <- LOOCV.tmp + (Y.test[i] - approx.func(X.2[i]))^2
         }
-        ASEP[k, m] <- ASEP.tmp/length(X.2) # or should this be "/500" based on write-up?
+        LOOCV[k, m] <- LOOCV.tmp/length(X.2) # or should this be "/500" based on write-up?
 
         Y.matrix[, k + 1] <- smooth.y
     }
@@ -139,5 +140,5 @@ for(m in 1:4){
 plots <- ggarrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 ggsave("scenarios.png", plots)
 
-## Get ASEP
-ASEP
+## Get LOOCV
+LOOCV
