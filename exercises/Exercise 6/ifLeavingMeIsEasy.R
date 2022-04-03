@@ -19,7 +19,7 @@ LOOCV <- matrix(0, length(H), 4) # initialize average squared error in predictio
 X.1 <- runif(375, 0, 1) # testing data
 X.2 <- runif(125, 0, 1) # training data
 X <- c(X.1, X.2)
-H <- X%*%solve(t(X)%*%X)%*%t(X)
+H.mat <- X%*%solve(t(X)%*%X)%*%t(X)
 low.noise <- rnorm(500, 0, 0.25)
 high.noise <- rnorm(500, 0, 0.8)
 
@@ -74,7 +74,7 @@ for(m in 1:4){
     }
 
     ## Initialize Progress Bar
-    pb <- mrs.pb(paste0("I need more validation (", m, ")"), length(H))
+    pb <- mrs.pb(paste0("It's ok. Everyone leaves me. (", m, ")"), length(H))
 
     ## For each value of h
     for(k in 1:length(H)){
@@ -111,7 +111,7 @@ for(m in 1:4){
         LOOCV.tmp <- 0
         for(i in 1:length(X)){
             num.tmp <- Y[i] - approx.func(X[i])
-            den.tmp <- 1 - H[i, i]
+            den.tmp <- 1 - H.mat[i, i]
             LOOCV.tmp <- LOOCV.tmp + (num.tmp/den.tmp)^2
         }
         LOOCV[k, m] <- LOOCV.tmp/length(X)
@@ -123,10 +123,10 @@ for(m in 1:4){
     colnames(Y.matrix) <- c("true", "h = 0.1", "h = 0.2", "h = 0.5", "h = 1")
     plot.df <- data.frame(cbind(x.grid, Y.matrix[, -1]))
     plot.df <- plot.df %>% gather(key = "h", value = "value", -1)
-    point.df <- data.frame(test.y = Y.test, test.x = X.2)
+    point.df <- data.frame(test.y = Y, test.x = X)
 
     ## Plot
-    plot <- ggplot(plot.df, aes(x = x.grid, y = value)) + geom_line(aes(color = h)) + theme_classic() + ggtitle("Cross Validation") + xlab("x") + ylab("Estimated Value") + geom_point(point.df, mapping = aes(x = test.x, y = test.y), alpha = 0.6)
+    plot <- ggplot(plot.df, aes(x = x.grid, y = value)) + geom_point(point.df, mapping = aes(x = test.x, y = test.y), alpha = 0.4) + geom_line(aes(color = h)) + theme_classic() + ggtitle("Cross Validation") + xlab("x") + ylab("Estimated Value") 
     assign(paste0("p", m), plot)
 
 }
