@@ -201,3 +201,13 @@ for(p in 2:(P+1)){ # for each parameter
 }
 plots <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow = 3, ncol = 3) + ggtitle("Posterior Means of Coefficients Per State")
 ggsave("coefficient_estimates.png", plots)
+
+###
+### Posterior Means Across States
+###
+
+post.betas <- rep(0, 9)
+for(i in 1:9){
+    post.betas[i] <- mean(beta.save[i, , n.burn:n.mcmc])
+}
+post.betas
