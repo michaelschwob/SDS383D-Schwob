@@ -58,6 +58,7 @@ gauss.kernel <- function(x){
 
 ## Problem Set-up
 H <- c(0.1, 0.2, 0.5, 1) # list of h values
+H <- seq(0.1, 1, length.out = 20)
 LOOCV <- rep(0, length(H)) # initialize average squared error in prediction (LOOCV) matrix
 
 M <- 1000 # number of "new" points to fit kernel-estimator
@@ -145,5 +146,20 @@ ggsave("residuals.png", plot.resid)
 ### (G) Construct an Approximate Point-wise 95% CI
 ###
 
+## Obtain confidence intervals
+ci.low <- ci.high <- rep(0, n) # initialize confidence intervals
+ci.high <- rep(10, n)
+s2.hat <- sum((Y-y.fit)^2)/(n - 2*sum(diag(H.mat)) + sum(diag(t(H.mat)%*%H.mat)))
+fact <- 1.96*sqrt(s2.hat)
+for(i in 1:n){
+    ci.low[i] <- y.fit[i] - fact
+    ci.high[i] <- y.fit[i] + fact
+}
 
+## Confidence Interval Data Frame
+ci.df <- data.frame(low = ci.low, high = ci.high, x = X)
 
+## Plot
+plot.df <- data.frame(fit = y.fit, x = X, actual = Y)
+plot2 <- ggplot(plot.df, aes(x = X)) + geom_line(aes(y = fit)) + geom_point(aes(y = actual), color = "red") + ggtitle("Fit Y vs. Actual Y") + xlab("X") + ylab("Y") + theme_classic() + geom_segment(ci.df, mapping = aes(x = x, xend = x, y = low, yend = high), color = "#BF5700", size = 1.5)
+ggsave("ci_plot.png", plot2)
