@@ -14,4 +14,4 @@
 
 <a href="https://github.com/michaelschwob/SDS383D-Schwob/blob/main/exercises/Exercise%205/Michael_Schwob_SDS383D_HW_5.pdf">Exercise 5</a>
 
-<a href="https://github.com/michaelschwob/SDS383D-Schwob/blob/main/exercises/Exercise%205/Michael_Schwob_SDS383D_HW_6.pdf">Exercise 6</a>
+<a href="https://github.com/michaelschwob/SDS383D-Schwob/blob/main/exercises/Exercise%206/Michael_Schwob_SDS383D_HW_6.pdf">Exercise 6</a>
