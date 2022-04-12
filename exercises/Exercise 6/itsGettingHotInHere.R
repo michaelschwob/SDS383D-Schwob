@@ -11,7 +11,6 @@ data <- read.csv("utilities.csv")
 
 Y <- data$gasbill/data$billingdays
 X <- data$temp
-H.mat <- X%*%solve(t(X)%*%X)%*%t(X)
 n <- length(X)
 
 ###
@@ -57,19 +56,18 @@ gauss.kernel <- function(x){
 ##
 
 ## Problem Set-up
-#H <- c(6) # list of h values
-H <- seq(0.1, 1, length.out = 20)
+H <- seq(0.1, 10, length.out = 20)
 LOOCV <- rep(0, length(H)) # initialize average squared error in prediction (LOOCV) matrix
 
-M <- 1000 # number of "new" points to fit kernel-estimator
-x.grid <- seq(min(X), max(X), length.out = M) # "new points"; must be within range of X data
+x.grid <- X
+M <- length(x.grid)
 Y.matrix <- matrix(0, M, length(H)) # save estimated y for plotting
 
 ## Initialize Progress Bar
 pb <- mrs.pb("bills, bills, bills...", length(H))
 
-# H.mat <- matrix(0, n, M) # !!
-# weightz <- rep(0, n)
+H.mat <- matrix(0, n, M) # !!
+weightz <- rep(0, n)
 
 ## For each value of h
 for(k in 1:length(H)){
@@ -85,24 +83,21 @@ for(k in 1:length(H)){
         for(i in 1:n){ # for each observation
             num <- num + weight.func(x.grid[j], X[i], h)*Y[i]
             den <- den + weight.func(x.grid[j], X[i], h)
-            #weightz[i] <- weight.func(x.grid[j], X[i], h)
+            weightz[i] <- weight.func(x.grid[j], X[i], h)
         }
-        #weightz <- weightz/sum(weightz)
+        weightz <- weightz/sum(weightz)
 
-        # for(i in 1:n){
-        #     H.mat[i, j] <- weightz[i]
-        # }
+        for(i in 1:n){
+            H.mat[i, j] <- weightz[i]
+        }
 
         smooth.y[j] <- num/den
     }
 
-    ## Approximate Function
-    approx.func <- approxfun(x.grid, smooth.y, rule = 2) # rule = 2 is needed to extrapolate (get rid of NAs)
-
     ## Obtain LOOCV from test data
     LOOCV.tmp <- 0
     for(i in 1:n){ # for each observation
-        num.tmp <- Y[i] - approx.func(X[i]) 
+        num.tmp <- Y[i] - smooth.y[i]
         den.tmp <- 1 - H.mat[i, i]
         LOOCV.tmp <- LOOCV.tmp + (num.tmp/den.tmp)^2
     }
@@ -131,12 +126,8 @@ ggsave("imFairlyLocal.png", plot)
 LOOCV
 
 ## Fit data using new function
-optim.h <- which(LOOCV == min(LOOCV)) # get optimal h
-approx.func <- approxfun(x.grid, Y.matrix[, optim.h], rule = 2)
-y.fit <- rep(0, n)
-for(i in 1:n){
-    y.fit[i] <- approx.func(X[i])
-}
+optim.h <- which(LOOCV == min(LOOCV, na.rm = TRUE)) # get optimal h
+y.fit <- Y.matrix[, optim.h]
 
 ## Plot Fit vs Actual
 plot.df <- data.frame(fit = y.fit, x = X, actual = Y)
@@ -173,7 +164,7 @@ ci.low <- ci.high <- rep(0, n) # initialize confidence intervals
 ci.high <- rep(10, n)
 
 for(i in 1:n){
-    fact <- 1.96*sqrt(s2.hat*norm(Weight.mat[, i], type = "2"))
+    fact <- 1.96*sqrt(s2.hat*norm(Weight.mat[i, ], type = "2"))
     ci.low[i] <- y.fit[i] - fact
     ci.high[i] <- y.fit[i] + fact
 }
