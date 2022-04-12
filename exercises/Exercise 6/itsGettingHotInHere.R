@@ -57,7 +57,7 @@ gauss.kernel <- function(x){
 ##
 
 ## Problem Set-up
-H <- c(0.1, 0.2, 0.5, 1) # list of h values
+#H <- c(6) # list of h values
 H <- seq(0.1, 1, length.out = 20)
 LOOCV <- rep(0, length(H)) # initialize average squared error in prediction (LOOCV) matrix
 
@@ -67,6 +67,9 @@ Y.matrix <- matrix(0, M, length(H)) # save estimated y for plotting
 
 ## Initialize Progress Bar
 pb <- mrs.pb("bills, bills, bills...", length(H))
+
+# H.mat <- matrix(0, n, M) # !!
+# weightz <- rep(0, n)
 
 ## For each value of h
 for(k in 1:length(H)){
@@ -82,7 +85,14 @@ for(k in 1:length(H)){
         for(i in 1:n){ # for each observation
             num <- num + weight.func(x.grid[j], X[i], h)*Y[i]
             den <- den + weight.func(x.grid[j], X[i], h)
+            #weightz[i] <- weight.func(x.grid[j], X[i], h)
         }
+        #weightz <- weightz/sum(weightz)
+
+        # for(i in 1:n){
+        #     H.mat[i, j] <- weightz[i]
+        # }
+
         smooth.y[j] <- num/den
     }
 
@@ -146,12 +156,24 @@ ggsave("residuals.png", plot.resid)
 ### (G) Construct an Approximate Point-wise 95% CI
 ###
 
+## Get weight matrix
+Weight.mat <- matrix(0, n, n)
+for(i in 1:n){ # for each observation
+    for(j in 1:n){ # compare to other observations
+        Weight.mat[i, j] <- weight.func(X[j], X[i], optim.h) # x.new, x.old
+    }
+    Weight.mat[i, ] <- Weight.mat[i, ]/sum(Weight.mat[i, ])
+}
+
+## Normalize Weight Matrix
+s2.hat <- t(Y - Weight.mat%*%Y)%*%(Y - Weight.mat%*%Y)/(n - 2*sum(diag(Weight.mat)) + sum(diag(t(Weight.mat)%*%Weight.mat)))
+
 ## Obtain confidence intervals
 ci.low <- ci.high <- rep(0, n) # initialize confidence intervals
 ci.high <- rep(10, n)
-s2.hat <- sum((Y-y.fit)^2)/(n - 2*sum(diag(H.mat)) + sum(diag(t(H.mat)%*%H.mat)))
-fact <- 1.96*sqrt(s2.hat)
+
 for(i in 1:n){
+    fact <- 1.96*sqrt(s2.hat*norm(Weight.mat[, i], type = "2"))
     ci.low[i] <- y.fit[i] - fact
     ci.high[i] <- y.fit[i] + fact
 }
@@ -161,5 +183,5 @@ ci.df <- data.frame(low = ci.low, high = ci.high, x = X)
 
 ## Plot
 plot.df <- data.frame(fit = y.fit, x = X, actual = Y)
-plot2 <- ggplot(plot.df, aes(x = X)) + geom_line(aes(y = fit)) + geom_point(aes(y = actual), color = "red") + ggtitle("Fit Y vs. Actual Y") + xlab("X") + ylab("Y") + theme_classic() + geom_segment(ci.df, mapping = aes(x = x, xend = x, y = low, yend = high), color = "#BF5700", size = 1.5)
+plot2 <- ggplot(plot.df, aes(x = X)) + geom_line(aes(y = fit)) + geom_point(aes(y = actual), color = "red") + ggtitle("Fit Y vs. Actual Y") + xlab("X") + ylab("Y") + theme_classic() + geom_segment(ci.df, mapping = aes(x = x, xend = x, y = low, yend = high), color = "#BF5700", size = 1)
 ggsave("ci_plot.png", plot2)

@@ -76,6 +76,8 @@ for(m in 1:4){
     ## Initialize Progress Bar
     pb <- mrs.pb(paste0("It's ok. Everyone leaves me. (", m, ")"), length(H))
 
+    H.mat <- matrix(0, length(X), length(x.grid)) # !!
+
     ## For each value of h
     for(k in 1:length(H)){
 
@@ -99,6 +101,7 @@ for(m in 1:4){
             tmp.sum <- 0
             for(i in 1:length(X)){
                 tmp.sum <- tmp.sum + weights[i]*Y[i]
+                H.mat[i, j] <- weights[i]
             }
 
             smooth.y[j] <- tmp.sum
