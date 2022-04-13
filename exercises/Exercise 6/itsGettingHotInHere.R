@@ -56,9 +56,7 @@ gauss.kernel <- function(x){
 ##
 
 ## Problem Set-up
-#H <- seq(0.1, 15, length.out = 100)
-H <- seq(0.1, 10, length.out = 20)
-H <- 6.9
+H <- seq(0.1, 15, length.out = 100)
 LOOCV <- rep(0, length(H)) # initialize average squared error in prediction (LOOCV) matrix
 
 x.grid <- X
@@ -188,4 +186,4 @@ ggsave("ci_plot.png", plot2)
 plot3 <- ggplot(plot.df, aes(x = X)) + geom_line(aes(y = fit)) + geom_point(aes(y = actual), color = "red") + ggtitle("Fit Y vs. Actual Y") + xlab("X") + ylab("Y") + theme_classic() + geom_ribbon(ci.df, mapping = aes(ymin = low, ymax = high), color = "#BF5700", size = 1, alpha = 0.5)
 
 tog <- ggarrange(plot2, plot3, nrow = 2, ncol = 1)
-ggsave("ci_plot.png", tog)
+ggsave("ci_plot.png", plot3)
