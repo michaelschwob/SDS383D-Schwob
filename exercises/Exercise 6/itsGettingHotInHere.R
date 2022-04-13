@@ -56,7 +56,7 @@ gauss.kernel <- function(x){
 ##
 
 ## Problem Set-up
-H <- seq(0.1, 10, length.out = 20)
+H <- seq(0.1, 15, length.out = 100)
 LOOCV <- rep(0, length(H)) # initialize average squared error in prediction (LOOCV) matrix
 
 x.grid <- X
@@ -119,7 +119,7 @@ plot.df <- plot.df %>% gather(key = "h", value = "value", -1)
 point.df <- data.frame(test.y = Y, test.x = X)
 
 ## Plot
-plot <- ggplot(plot.df, aes(x = x.grid, y = value)) + geom_line(aes(color = h)) + theme_classic() + ggtitle("Local Linear Estimation") + xlab("x") + ylab("Estimated Value") + geom_point(point.df, mapping = aes(x = test.x, y = test.y), alpha = 0.4)
+plot <- ggplot(plot.df, aes(x = x.grid, y = value)) + geom_line(aes(color = h)) + theme_classic() + ggtitle("Local Linear Estimation") + xlab("x") + ylab("Estimated Value") + geom_point(point.df, mapping = aes(x = test.x, y = test.y), alpha = 0.4) + theme(legend.position = "none")
 ggsave("imFairlyLocal.png", plot)
 
 ## Get LOOCV
