@@ -56,7 +56,9 @@ gauss.kernel <- function(x){
 ##
 
 ## Problem Set-up
-H <- seq(0.1, 15, length.out = 100)
+#H <- seq(0.1, 15, length.out = 100)
+H <- seq(0.1, 10, length.out = 20)
+H <- 6.9
 LOOCV <- rep(0, length(H)) # initialize average squared error in prediction (LOOCV) matrix
 
 x.grid <- X
@@ -106,6 +108,10 @@ for(k in 1:length(H)){
     Y.matrix[, k] <- smooth.y
 }
 
+###
+### Plot Different Functions
+###
+
 ## Prepare Data for Plotting
 name.vec <- 0
 for(i in 1:length(H)){
@@ -125,8 +131,12 @@ ggsave("imFairlyLocal.png", plot)
 ## Get LOOCV
 LOOCV
 
-## Fit data using new function
-optim.h <- which(LOOCV == min(LOOCV, na.rm = TRUE)) # get optimal h
+###
+### Plot Optimal Fit vs. Actual Data
+###
+
+## Get Optimal h
+optim.h <- which(LOOCV == min(LOOCV, na.rm = TRUE))
 y.fit <- Y.matrix[, optim.h]
 
 ## Plot Fit vs Actual
@@ -151,7 +161,7 @@ ggsave("residuals.png", plot.resid)
 Weight.mat <- matrix(0, n, n)
 for(i in 1:n){ # for each observation
     for(j in 1:n){ # compare to other observations
-        Weight.mat[i, j] <- weight.func(X[j], X[i], optim.h) # x.new, x.old
+        Weight.mat[i, j] <- weight.func(X[j], X[i], H[optim.h]) # x.new, x.old
     }
     Weight.mat[i, ] <- Weight.mat[i, ]/sum(Weight.mat[i, ])
 }
@@ -161,10 +171,8 @@ s2.hat <- t(Y - Weight.mat%*%Y)%*%(Y - Weight.mat%*%Y)/(n - 2*sum(diag(Weight.ma
 
 ## Obtain confidence intervals
 ci.low <- ci.high <- rep(0, n) # initialize confidence intervals
-ci.high <- rep(10, n)
-
 for(i in 1:n){
-    fact <- 1.96*sqrt(s2.hat*norm(Weight.mat[i, ], type = "2"))
+    fact <- 1.96*sqrt(s2.hat*sum(Weight.mat[i, ]^2))
     ci.low[i] <- y.fit[i] - fact
     ci.high[i] <- y.fit[i] + fact
 }
@@ -176,3 +184,8 @@ ci.df <- data.frame(low = ci.low, high = ci.high, x = X)
 plot.df <- data.frame(fit = y.fit, x = X, actual = Y)
 plot2 <- ggplot(plot.df, aes(x = X)) + geom_line(aes(y = fit)) + geom_point(aes(y = actual), color = "red") + ggtitle("Fit Y vs. Actual Y") + xlab("X") + ylab("Y") + theme_classic() + geom_segment(ci.df, mapping = aes(x = x, xend = x, y = low, yend = high), color = "#BF5700", size = 1)
 ggsave("ci_plot.png", plot2)
+
+plot3 <- ggplot(plot.df, aes(x = X)) + geom_line(aes(y = fit)) + geom_point(aes(y = actual), color = "red") + ggtitle("Fit Y vs. Actual Y") + xlab("X") + ylab("Y") + theme_classic() + geom_ribbon(ci.df, mapping = aes(ymin = low, ymax = high), color = "#BF5700", size = 1, alpha = 0.5)
+
+tog <- ggarrange(plot2, plot3, nrow = 2, ncol = 1)
+ggsave("ci_plot.png", tog)
