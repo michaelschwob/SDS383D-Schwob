@@ -24,11 +24,11 @@ n <- length(x)
 setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 6")
 
 ## Hyperparameters
-t2 <- 10^(-6) # suggested by James
-b <- c(3, 10, 15)
-t1 <- c(1, 5, 10)
+t2 <- 0 # suggested by James
+b <- c(10, 50, 100)
+t1 <- c(1, 10, 20)
 
-s2 <- 1
+s2 <- 2
 
 ###
 ### Covariance Functions
@@ -38,6 +38,13 @@ s2 <- 1
 matern.func <- function(x, b, tau1sq, tau2sq) {
 	eucDist = as.matrix(dist(x,diag=T,upper=T))
 	kron.delta = diag(nrow=length(x))
+	tau1sq*exp(-.5*(eucDist/b)^2) + tau2sq*kron.delta
+}
+
+## Create covariance vector with Matern function (squared exponential) # !! new
+matern.vec <- function(x, x.star, b, tau1sq, tau2sq) {
+    eucDist <- abs(x - x.star)
+    kron.delta <- 0 # this is off the main diagonal
 	tau1sq*exp(-.5*(eucDist/b)^2) + tau2sq*kron.delta
 }
 
@@ -54,14 +61,15 @@ for(k in 1:length(t1)){
         pb$tick()
 
         post.mean <- lb <- ub <- rep(0, n) # initialize posterior vectors
-        Sig <- matern.func(x, b[j], t1[k], t2)
 
         for(i in 1:n){ # for each observation
 
-            rho.ii <- Sig[i, i]    # constant
-            rho.row <- Sig[i, -i]  # row: 1x(n-1)
-            rho.col <- Sig[-i, i]  # column: (n-1)x1
-            rho.Sig <- Sig[-i, -i] # matrix: (n-1)x(n-1)
+            other.data <- x[-i]
+
+            rho.ii <- matern.func(x[i], b[j], t1[k], t2)    # constant
+            rho.col <- as.matrix(matern.vec(other.data, x[i], b[j], t1[k], t2))  # column: (n-1)x1
+            rho.row <- t(rho.col)  # row: 1x(n-1) 
+            rho.Sig <- matern.func(other.data, b[j], t1[k], t2) # matrix: (n-1)x(n-1)
             rho.Sig <- rho.Sig + diag(s2, nrow = n-1) # add jitter
 
             post.mean[i] <- rho.row%*%solve(rho.Sig)%*%y[-i]
@@ -72,12 +80,6 @@ for(k in 1:length(t1)){
             ub[i] <- post.mean[i] + 1.96*sqrt(post.cov)
 
         }
-
-        ## Alternative attempt
-        post.mean <- solve(diag(n) + s2*solve(Sig))%*%y
-        diff.Sig <- solve(diag(n)/s2 + solve(Sig)) 
-        lb <- post.mean - 1.96*sqrt(diag(diff.Sig))
-        ub <- post.mean + 1.96*sqrt(diag(diff.Sig))
 
         plot.df <- data.frame(mean = post.mean, y = y, x = x, lb = lb, ub = ub)
 
@@ -90,5 +92,4 @@ for(k in 1:length(t1)){
 }
 
 plot <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow = 3, ncol = 3)
-#ggsave("post_conf.png", plot)
-plot
+ggsave("post_conf.png", plot)
