@@ -56,24 +56,6 @@ for(k in 1:length(t1)){
         post.mean <- lb <- ub <- rep(0, n) # initialize posterior vectors
         Sig <- matern.func(x, b[j], t1[k], t2)
 
-        for(i in 1:n){ # for each observation
-
-            rho.ii <- Sig[i, i]    # constant
-            rho.row <- Sig[i, -i]  # row: 1x(n-1)
-            rho.col <- Sig[-i, i]  # column: (n-1)x1
-            rho.Sig <- Sig[-i, -i] # matrix: (n-1)x(n-1)
-            rho.Sig <- rho.Sig + diag(s2, nrow = n-1) # add jitter
-
-            post.mean[i] <- rho.row%*%solve(rho.Sig)%*%y[-i]
-
-            post.cov <- rho.ii - rho.row%*%solve(rho.Sig)%*%rho.col
-
-            lb[i] <- post.mean[i] - 1.96*sqrt(post.cov)
-            ub[i] <- post.mean[i] + 1.96*sqrt(post.cov)
-
-        }
-
-        ## Alternative attempt
         post.mean <- solve(diag(n) + s2*solve(Sig))%*%y
         diff.Sig <- solve(diag(n)/s2 + solve(Sig)) 
         lb <- post.mean - 1.96*sqrt(diag(diff.Sig))
@@ -92,3 +74,53 @@ for(k in 1:length(t1)){
 plot <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow = 3, ncol = 3)
 #ggsave("post_conf.png", plot)
 plot
+
+###
+### (E) : Marginal Likelihood to Fing Optimal Hyperparameters
+###
+
+###
+### Obtain Optimal Hyperparameters
+###
+
+M <- 500 # number of points in each grid
+t1.grid <- seq(0.001, 100, length.out = M)
+b.grid <- seq(0.0001, 100, length.out = M)
+grid <- expand.grid(b.grid, t1.grid)
+y <- as.matrix(y)
+
+margin.likelihood <- function(b, t1){
+    C <- matern.func(x, b, t1, t2) # get C
+    Sig <- C + s2*diag(n)
+    result <- -1/2*t(y)%*%solve(Sig)%*%y - 1/2*log(det(Sig)) - n/2*log(2*pi)
+    return(result)
+}
+
+log.vals <- rep(0, dim(grid)[1])
+pb <- mrs.pb("Evaluating log-marginal likelihood: ", dim(grid)[1])
+
+for(i in 1:dim(grid)[1]){
+    pb$tick()
+    log.vals[i] <- margin.likelihood(grid[i, 1], grid[i, 2]) # b, tau
+}
+
+b.hat <- grid[which(log.vals == max(log.vals, na.rm = TRUE)), 1]
+t1.hat <- grid[which(log.vals == max(log.vals, na.rm = TRUE)), 2]
+
+b.hat <- 61.52308
+t1.hat <- 39.67996
+
+###
+### Compute Posterior Mean for f|y and Plot
+###
+
+Sig <- matern.func(x, b.hat, t1.hat, t2)
+
+post.mean <- solve(diag(n) + s2*solve(Sig))%*%y
+diff.Sig <- solve(diag(n)/s2 + solve(Sig))
+
+plot.df <- data.frame(mean = post.mean, y = y, x = x)
+
+plot <- ggplot(plot.df, aes(x = x, y = y)) + geom_point(color = "red", alpha = 0.8) + geom_line(mapping = aes(x = x, y = post.mean), color = "#BF5700") + theme_classic() + ggtitle(paste0("Gaussian Process: b = ", b.hat, ", t1 = ", t1.hat))
+plot
+ggsave("optimal_hyperparameters.png", plot)
