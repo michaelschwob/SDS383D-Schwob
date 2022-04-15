@@ -9,7 +9,6 @@
 ## Load the Goodies
 library(mrs)
 library(ggpubr)
-#library(GauPro)
 mrs.seed()
 mrs.load()
 
@@ -25,13 +24,11 @@ n <- length(x)
 setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 6")
 
 ## Hyperparameters
-t2 <- 10^(-10)
-#t2 <- 0 # suggested by James
-b <- seq(10, 100, length.out = 10)
-t1 <- seq(0.1, 10, length.out = 10)
+t2 <- 0 # suggested by James
+b <- c(10, 50, 100)
+t1 <- c(1, 10, 20)
 
-b <- 5
-t1 <- 0.001
+s2 <- 2
 
 ###
 ### Covariance Functions
@@ -44,37 +41,12 @@ matern.func <- function(x, b, tau1sq, tau2sq) {
 	tau1sq*exp(-.5*(eucDist/b)^2) + tau2sq*kron.delta
 }
 
-## Create covariance vector with Matern function (squared exponential) # !! new
-matern.vec <- function(x, x.star, b, tau1sq, tau2sq) {
-    eucDist <- abs(x - x.star)
-    kron.delta <- 0 # this is off the main diagonal
-	tau1sq*exp(-.5*(eucDist/b)^2) + tau2sq*kron.delta
-}
-
-## Matern function with parameter 5/2 (matrix)
-matern2.func <- function(x, b, tau1sq, tau2sq) {
-	eucDist = as.matrix(dist(x,diag=T,upper=T))
-	kron.delta = diag(nrow=length(x))
-
-    tau1sq*(1 + sqrt(5)*eucDist/b + 5*eucDist^2/(3*b^2))*exp(-sqrt(5)*eucDist/b) + tau2sq*kron.delta
-}
-
-## Matern function with parameter 5/2 (vector)
-matern2.vec <- function(x, x.star, b, tau1sq, tau2sq) {
-	eucDist <- abs(x - x.star)
-	kron.delta = 0
-
-    tau1sq*(1 + sqrt(5)*eucDist/b + 5*eucDist^2/(3*b^2))*exp(-sqrt(5)*eucDist/b) + tau2sq*kron.delta
-}
-
 ###
 ### Implementation
 ###
 
-counter <- 0
+counter <- 1
 pb <- mrs.pb("Gauss me", length(t1)*length(b))
-
-#gp <- GauPro(x, y)
 
 for(k in 1:length(t1)){
     for(j in 1:length(b)){
@@ -82,33 +54,28 @@ for(k in 1:length(t1)){
         pb$tick()
 
         post.mean <- lb <- ub <- rep(0, n) # initialize posterior vectors
+        Sig <- matern.func(x, b[j], t1[k], t2)
 
-        for(i in 1:n){ # for each data point ; c = current, o = other
+        for(i in 1:n){ # for each observation
 
-            Sig.cc <- matern.func(x[i], b[j], t1[k], t2) # should just be 1 + t2
-            Sig.cc <- 1
-            Sig.oo <- matern.func(x[-i], b[j], t1[k], t2)
-            Sig.oc <- as.matrix(matern.vec(x[-i], x[i], b[j], t1[k], t2))
+            rho.ii <- Sig[i, i]    # constant
+            rho.row <- Sig[i, -i]  # row: 1x(n-1)
+            rho.col <- Sig[-i, i]  # column: (n-1)x1
+            rho.Sig <- Sig[-i, -i] # matrix: (n-1)x(n-1)
+            rho.Sig <- rho.Sig + diag(s2, nrow = n-1) # add jitter
 
-            # we don't have means, right ??
-            mu.c <- 0
-            mu.o <- rep(0, n-1)
+            post.mean[i] <- rho.row%*%solve(rho.Sig)%*%y[-i]
 
-            post.mean[i] <- mu.c + t(Sig.oc)%*%solve(Sig.oo)%*%(y[-i] - mu.o)
+            post.cov <- rho.ii - rho.row%*%solve(rho.Sig)%*%rho.col
 
-            Sig.bar <- Sig.cc - t(Sig.oc)%*%solve(Sig.oo)%*%Sig.oc
-
-            #diff <- 1.96*sqrt(Sig.bar)*(n-1) # is this right??
-            diff <- 1.96*sqrt(Sig.bar) # is this right??
-
-            lb[i] <- post.mean[i] - diff
-            ub[i] <- post.mean[i] + diff
+            lb[i] <- post.mean[i] - 1.96*sqrt(post.cov)
+            ub[i] <- post.mean[i] + 1.96*sqrt(post.cov)
 
         }
 
         plot.df <- data.frame(mean = post.mean, y = y, x = x, lb = lb, ub = ub)
 
-        plot <- ggplot(plot.df, aes(x = x, y = y)) + geom_point(color = "red", alpha = 0.8) + geom_ribbon(mapping = aes(ymin = lb, ymax = ub), alpha = 0.5) + geom_line(mapping = aes(x = x, y = post.mean), color = "#BF5700") + theme_classic() + ggtitle("Gaussian Process for Utilities")
+        plot <- ggplot(plot.df, aes(x = x, y = y)) + geom_point(color = "red", alpha = 0.8) + geom_ribbon(mapping = aes(ymin = lb, ymax = ub), alpha = 0.5) + geom_line(mapping = aes(x = x, y = post.mean), color = "#BF5700") + theme_classic() + ggtitle(paste0("Gaussian Process: b = ", b[j], ", t1 = ", t1[k]))
         assign(paste0("p", counter), plot)
 
         counter <- counter + 1
@@ -116,5 +83,5 @@ for(k in 1:length(t1)){
     }
 }
 
-
-
+plot <- ggarrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow = 3, ncol = 3)
+ggsave("post_conf.png", plot)
