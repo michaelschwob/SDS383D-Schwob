@@ -28,7 +28,7 @@ t2 <- 10^(-6) # suggested by James
 b <- c(3, 10, 15)
 t1 <- c(1, 5, 10)
 
-s2 <- 1
+s2 <- 0.61 # the MAP
 
 ###
 ### Covariance Functions

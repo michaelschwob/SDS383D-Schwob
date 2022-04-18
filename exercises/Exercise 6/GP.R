@@ -28,7 +28,7 @@ matern2.func <- function(x, b, tau1sq, tau2sq) {
 n <- 500
 x.grid <- sort(runif(n, 0, 1))
 
-t2 <- 10^(-6)
+t2 <- 0
 b <- seq(0.0001, 1, length.out = 10)
 t1 <- seq(0, 2, length.out = 10)
 
