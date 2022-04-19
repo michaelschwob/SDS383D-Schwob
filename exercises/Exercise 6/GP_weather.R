@@ -9,7 +9,6 @@
 ## Load the Goodies
 library(mrs)
 library(plgp) # for distance function
-library(image) # for plotting
 mrs.seed()
 mrs.load()
 
@@ -18,10 +17,10 @@ setwd(paste0(getwd(), "/SDS383D-Schwob/data"))
 data <- read.csv("weather.csv")
 y1 <- data$pressure
 y2 <- data$temperature
-X <- data[, c(4, 3)]
+X <- data[, c(3, 4)]
 n <- length(y1)
 
-y <- y1 # change to y2 to get temperature visuals
+y <- y2 # change to y2 to get temperature visuals
 
 ## Set Directory
 setwd("/home/mikel/Desktop/Code/SDS383D-Schwob/exercises/Exercise 6")
@@ -31,20 +30,22 @@ t2 <- 10^(-6) # suggested by James
 s2 <- 1
 
 ###
-### Covariance Functions
+### Functions
 ###
 
-## Create covariance matrix with Matern function (squared exponential)
-matern.func <- function(X, b, tau1sq, tau2sq){
-    eucDist <- distance(X)
-	kron.delta = diag(nrow=dim(X)[1])
-	tau1sq*exp(-.5*(eucDist/b)^2) + tau2sq
+## Function of Squared exponential covariance function
+Exp2Sigma <- function(X, b, tau1sq, tau2sq){
+  eucDist = as.matrix(dist(X,diag=T,upper=T))
+  kron.delta = diag(nrow(X))
+  tau1sq*exp(-.5*(eucDist/b)^2) + tau2sq*kron.delta
 }
 
-## Create covariance matrix with Matern function (squared exponential) given distance matrix
-matern.dist <- function(X, b, tau1sq, tau2sq) {
-	kron.delta = diag(nrow=dim(X)[1])
-	tau1sq*exp(-.5*(X/b)^2) + tau2sq
+## Log-marginal likelihood function
+margin.likelihood <- function(b, t1){
+    C <- Exp2Sigma(X, b, t1, t2)
+    Sig <- C + s2*diag(n)
+    result <- -1/2*t(y)%*%solve(Sig)%*%y - 1/2*log(det(C + s2*diag(n))) - n/2*log(2*pi)
+    return(result)
 }
 
 ###
@@ -52,19 +53,11 @@ matern.dist <- function(X, b, tau1sq, tau2sq) {
 ###
 
 ## Set-up
-M <- 250 # number of points in each grid
-t1.grid <- seq(0.001, 100, length.out = M)
-b.grid <- seq(0.0001, 100, length.out = M)
+M <- 50 # number of points in each grid
+t1.grid <- seq(0.01, 200, length.out = M)
+b.grid <- seq(0.01, 5, length.out = M)
 grid <- expand.grid(b.grid, t1.grid)
 y <- as.matrix(y)
-
-## Log-marginal likelihood function
-margin.likelihood <- function(b, t1){
-    C <- matern.func(X, b, t1, t2) # get C
-    Sig <- C + s2*diag(n)
-    result <- -1/2*t(y)%*%solve(Sig)%*%y - 1/2*log(det(Sig)) - n/2*log(2*pi)
-    return(result)
-}
 
 ## Iterate through grid of points
 log.vals <- rep(0, dim(grid)[1])
@@ -83,44 +76,46 @@ t1.hat <- grid[which(log.vals == max(log.vals, na.rm = TRUE)), 2]
 ###
 
 ## Obtain regular grid to obtain posterior means and standard deviations
-M <- 50
-x.lat <- seq(min(X[, 1]), max(X[, 1]), length.out = M)
-x.long <- seq(min(X[, 2]), max(X[, 2]), length.out = M)
-X.new <- expand.grid(x.lat, x.long) 
+M <- 100
+x.lat <- seq(min(X[, 2]), max(X[, 2]), length.out = M)
+x.long <- seq(min(X[, 1]), max(X[, 1]), length.out = M)
+X.new <- expand.grid(x.long, x.lat) 
 
-## Get optimal Sigma under given data
-Sigma <- matern.func(X, b.hat, t1.hat, t2)
-S.inv <- solve(Sigma + s2*diag(ncol(Sigma)))
+t1 <- t1.hat
+b <- b.hat
 
-## Get optimal Sigma for new data
-DX.new <- distance(X.new) # distance matrix for all new points ; 2500 x 2500
-SX.new <- matern.dist(DX.new, b.hat, t1.hat, t2) # C for new points ; 2500 x 2500
+## Function to calculate C(x,x^*)
+C_tilde <- function(X, Xstar, b, tau1sq, tau2sq){
+  Dist1 = (X[,1] - Xstar[,1])
+  Dist2 = (X[,2] - Xstar[,2])
+  tau1sq*exp(-.5*((Dist1/as.numeric(b))^2 + (Dist2/as.numeric(b))^2)) #+ tau2sq*colSums(X == Xstar)
+}
 
-## Get optimal Sigma across new data and given data
-DX <- distance(X.new, X) # 2500 x 157
-SX <- matern.dist(DX, b.hat, t1.hat, t2) # 2500 x 157
-
-## Get posterior means and variances ; from GP (B)
-mu.post <- SX%*%S.inv%*%y
-var.post <- SX.new - SX%*%S.inv%*%t(SX)
-sd.post <- sqrt(diag(var.post))
-sd.post <- ifelse(is.na(sd.post), 8, sd.post) # to smooth across NA values
+C <- Exp2Sigma(X, b, t1, t2)
+Cinv <- solve(C + s2*diag(n))
+fhat <- var <- rep(0, M)
+for (i in 1:nrow(X.new)){
+  Ct <- C_tilde(X, X.new[i,], b, t1, t2)
+  Cstar <- C_tilde(X.new[i,], X.new[i,], b, t1, t2)
+  fhat[i] <- Ct%*%Cinv%*%as.matrix(y,ncol=1)
+  var[i] <- Cstar - Ct%*%Cinv%*%matrix(Ct,ncol=1)
+}
 
 ###
 ### Plotting Results
 ###
 
 ## 2-d Heat Plot
-pdf("y1.pdf")
+pdf("y2_new.pdf")
 par(mfrow = c(1, 2))
-cols <- heat.colors(128)
-image(x.lat, x.long, matrix(mu.post, ncol = M), xlab = "Latitude", ylab = "Longitude", col = cols)
-points(X[, 1], X[, 2])
-image(x.lat, x.long, matrix(sd.post, ncol = M), xlab = "Latitude", ylab = "Longitude", col = cols)
-points(X[, 1], X[, 2])
+cols <- heat.colors(100)
+image(x.lat, x.long, matrix(fhat, ncol = M), xlab = "Latitude", ylab = "Longitude", col = cols)
+points(X[, 2], X[, 1])
+image(x.lat, x.long, matrix(sqrt(var), ncol = M), xlab = "Latitude", ylab = "Longitude", col = cols)
+points(X[, 2], X[, 1])
 dev.off()
 
 ## Perspective Plot
-pdf("persp1.pdf")
-persp(x.lat, x.long, matrix(mu.post, ncol = M), xlab = "Latitude", ylab = "Longitude", zlab = "Posterior Preditive Mean", theta = -30, phi = 30)
+pdf("persp2_new.pdf")
+persp(x.lat, x.long, matrix(fhat, ncol = M), zlim = c(min(fhat)-1, max(fhat)+1), xlab = "Latitude", ylab = "Longitude", zlab = "Posterior Preditive Mean", theta = -30, phi = 30)
 dev.off()
